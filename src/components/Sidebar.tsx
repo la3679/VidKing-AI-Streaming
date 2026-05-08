@@ -1,0 +1,48 @@
+import React from 'react';
+import { Home, Bookmark } from 'lucide-react';
+import { motion } from 'motion/react';
+import { useUIStore } from '../store/useUIStore';
+
+export const Sidebar = () => {
+  const { toggleAssistant, setSelectedMedia, isWatchlistOpen, setIsWatchlistOpen } = useUIStore();
+  return (
+    <nav className="w-20 border-r border-white/5 flex flex-col items-center py-8 gap-12 bg-black shrink-0 h-full z-50">
+      <motion.div 
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        className="w-12 h-12 bg-brand rounded-xl flex items-center justify-center font-black text-2xl tracking-tighter shadow-[0_0_30px_rgba(220,38,38,0.3)] cursor-pointer"
+      >
+        VK
+      </motion.div>
+      
+      <div className="flex flex-col gap-10 mt-4">
+        <div 
+          onClick={() => setSelectedMedia(null)}
+          className="group relative flex items-center justify-center cursor-pointer"
+        >
+          <Home className="sidebar-icon-active" />
+          <div className="absolute left-16 bg-brand text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none uppercase font-black">Home</div>
+        </div>
+        <div 
+          onClick={() => {
+            setSelectedMedia(null);
+            setIsWatchlistOpen(!isWatchlistOpen);
+          }}
+          className="group relative flex items-center justify-center cursor-pointer"
+        >
+          <Bookmark className={isWatchlistOpen ? "sidebar-icon-active" : "sidebar-icon"} />
+          <div className="absolute left-16 bg-white/10 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none uppercase font-black whitespace-nowrap">My List</div>
+        </div>
+      </div>
+
+      <div className="mt-auto flex flex-col gap-8">
+        <div 
+          onClick={toggleAssistant}
+          className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand to-purple-600 p-0.5 cursor-pointer hover:scale-110 transition-transform shadow-[0_0_20px_rgba(220,38,38,0.2)]"
+        >
+          <div className="w-full h-full bg-black rounded-[10px] overflow-hidden flex items-center justify-center text-[10px] font-black italic">AI</div>
+        </div>
+      </div>
+    </nav>
+  );
+};

@@ -1,0 +1,90 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Phase 3: Primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isEmailVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Validation Helpers
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email']) &&
+             data.uid == request.auth.uid &&
+             data.email == request.auth.token.email &&
+             (data.get('displayName', '') is string && data.get('displayName', '').size() <= 100);
+    }
+
+    function isValidProgress(data) {
+      return data.keys().hasAll(['tmdbId', 'type', 'progress', 'updatedAt']) &&
+             data.tmdbId is string && data.tmdbId.size() <= 64 &&
+             data.type in ['movie', 'tv'] &&
+             data.progress is number && data.progress >= 0 &&
+             data.updatedAt == request.time;
+    }
+
+    function isValidWatchList(data) {
+      return data.keys().hasAll(['tmdbId', 'type', 'addedAt']) &&
+             data.tmdbId is string && data.tmdbId.size() <= 64 &&
+             data.type in ['movie', 'tv'] &&
+             data.addedAt == request.time;
+    }
+
+    function isValidInteraction(data) {
+      return data.keys().hasAll(['type', 'timestamp', 'session']) &&
+             data.type is string && data.type.size() <= 50 &&
+             data.session is string && data.session.size() <= 128 &&
+             data.timestamp == request.time;
+    }
+
+    // Rules
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser(incoming());
+      allow update: if isOwner(userId) && isValidUser(incoming()) && 
+                    incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'preferences']);
+
+      match /progress/{progressId} {
+        allow list, get: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidProgress(incoming());
+        allow update: if isOwner(userId) && isValidProgress(incoming()) &&
+                      incoming().diff(existing()).affectedKeys().hasOnly(['progress', 'timestamp', 'duration', 'updatedAt', 'season', 'episode', 'completionRate']);
+      }
+
+      match /watchlist/{itemId} {
+        allow list, get: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidWatchList(incoming());
+        allow delete: if isOwner(userId);
+      }
+
+      match /interactions/{interactionId} {
+        allow list, get: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidInteraction(incoming());
+      }
+    }
+  }
+}

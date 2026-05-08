@@ -1,0 +1,14 @@
+{
+  "name": "VidKing AI Streaming",
+  "description": "A high-performance, AI-powered streaming platform with personalized recommendations, semantic search, and an AI streaming copilot.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "AI-powered recommendations",
+    "Real-time watch progress tracking",
+    "Semantic movie search",
+    "Streaming assistant"
+  ]
+}

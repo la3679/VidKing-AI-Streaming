@@ -1,0 +1,85 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Authenticated user profile and metadata",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "preferences": {
+          "type": "object",
+          "properties": {
+            "favoriteGenres": { "type": "array", "items": { "type": "string" } },
+            "theme": { "type": "string", "enum": ["dark", "light"] }
+          }
+        }
+      },
+      "required": ["uid", "email"]
+    },
+    "WatchProgress": {
+      "title": "Watch Progress",
+      "description": "Progress tracking for a specific piece of content",
+      "type": "object",
+      "properties": {
+        "tmdbId": { "type": "string" },
+        "type": { "type": "string", "enum": ["movie", "tv"] },
+        "season": { "type": "number" },
+        "episode": { "type": "number" },
+        "progress": { "type": "number" },
+        "duration": { "type": "number" },
+        "timestamp": { "type": "number" },
+        "completionRate": { "type": "number" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["tmdbId", "type", "progress", "updatedAt"]
+    },
+    "Interaction": {
+      "title": "User Interaction",
+      "description": "Granular user event tracking for ML ranking",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["click", "view", "skip", "pause", "rewatch", "search"] },
+        "itemId": { "type": "string" },
+        "metadata": { "type": "object" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "session": { "type": "string" }
+      },
+      "required": ["type", "timestamp"]
+    },
+    "WatchListItem": {
+      "title": "Watchlist Item",
+      "description": "Saved content for later",
+      "type": "object",
+      "properties": {
+        "tmdbId": { "type": "string" },
+        "type": { "type": "string", "enum": ["movie", "tv"] },
+        "addedAt": { "type": "string", "format": "date-time" },
+        "title": { "type": "string" },
+        "posterPath": { "type": "string" }
+      },
+      "required": ["tmdbId", "type", "addedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Root user documents"
+    },
+    "/users/{userId}/progress/{progressId}": {
+      "schema": "WatchProgress",
+      "description": "Subcollection for per-content watch progress"
+    },
+    "/users/{userId}/watchlist/{itemId}": {
+      "schema": "WatchListItem",
+      "description": "Subcollection for user's watchlist"
+    },
+    "/users/{userId}/interactions/{interactionId}": {
+      "schema": "Interaction",
+      "description": "Subcollection for user signals used by ranking engine"
+    }
+  }
+}
