@@ -13,7 +13,9 @@ import { TopHeader } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { MovieRow } from './components/MovieRow';
 import { AIPickRow } from './components/AIPickRow';
+import { ContinueWatchingRow } from './components/ContinueWatchingRow';
 import { AIAssistant } from './components/AIAssistant';
+import { Toaster } from './components/Toaster';
 import { MovieDetails } from './components/MovieDetails';
 import { AuthModal } from './components/AuthModal';
 import { ActorProfile } from './components/ActorProfile';
@@ -31,7 +33,7 @@ import { useWatchlistStore } from './store/useWatchlistStore';
 export default function App() {
   const { user, setUser } = useAuthStore();
   const { selectedMedia, setSelectedMedia, isAuthOpen, setIsAuthOpen, selectedActorId, searchQuery, setSearchQuery, isWatchlistOpen, setIsWatchlistOpen } = useUIStore();
-  const { subscribeToWatchlist, items: watchlistItems } = useWatchlistStore();
+  const { subscribeToWatchlist, items: watchlistItems, reset: resetWatchlist } = useWatchlistStore();
   const [trending, setTrending] = useState<Movie[]>([]);
   const [originals, setOriginals] = useState<Movie[]>([]);
   const [action, setAction] = useState<Movie[]>([]);
@@ -78,7 +80,9 @@ export default function App() {
     if (user) {
       return subscribeToWatchlist(user.uid);
     }
-  }, [user, subscribeToWatchlist]);
+    // Signed out — clear any stale watchlist state.
+    resetWatchlist();
+  }, [user, subscribeToWatchlist, resetWatchlist]);
 
   const loadHome = useCallback(async () => {
     setHomeLoading(true);
@@ -265,6 +269,9 @@ export default function App() {
                   </div>
                 ) : (
                   <>
+                    {/* Continue Watching (in-progress titles) */}
+                    <ContinueWatchingRow />
+
                     {/* AI Custom Picks */}
                     <AIPickRow />
 
@@ -332,6 +339,8 @@ export default function App() {
       <AnimatePresence>
         {selectedActorId && <ActorProfile />}
       </AnimatePresence>
+
+      <Toaster />
     </div>
   );
 }
