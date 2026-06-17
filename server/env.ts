@@ -20,7 +20,7 @@ export const serverEnv = {
   geminiApiKey,
   aiEnabled: Boolean(geminiApiKey),
   chatModel: str(process.env.GEMINI_CHAT_MODEL, 'gemini-2.5-flash'),
-  embedModel: str(process.env.GEMINI_EMBED_MODEL, 'text-embedding-004'),
+  embedModel: str(process.env.GEMINI_EMBED_MODEL, 'gemini-embedding-001'),
 
   /** Origins allowed to call the API (CORS). Comma-separated. */
   allowedOrigins: str(process.env.ALLOWED_ORIGINS, 'http://localhost:3000')
