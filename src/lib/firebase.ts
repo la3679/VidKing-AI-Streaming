@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import { getAnalytics, isSupported } from 'firebase/analytics';
 import appletConfig from '../../firebase-applet-config.json';
 import { env } from './env';
 import { logger } from './logger';
@@ -15,32 +16,69 @@ import { logger } from './logger';
 const resolvedApiKey = env.firebase.apiKey || appletConfig.apiKey;
 const resolvedProjectId = env.firebase.projectId || appletConfig.projectId;
 
-/** Whether Firebase has enough real config to authenticate / read Firestore. */
-export const firebaseEnabled = Boolean(resolvedApiKey && resolvedProjectId);
+/** A usable Firebase Web API key looks like `AIza...`. The App ID and other
+ *  values are commonly pasted here by mistake; reject anything that clearly
+ *  isn't an API key so a misconfiguration degrades gracefully (banner) instead
+ *  of throwing `auth/invalid-api-key` and blanking the app. */
+const looksLikeApiKey = /^AIza[0-9A-Za-z_-]{20,}$/.test(resolvedApiKey);
 
-if (!firebaseEnabled) {
+const configuredFirebase = Boolean(resolvedApiKey && resolvedProjectId && looksLikeApiKey);
+
+if (resolvedApiKey && !looksLikeApiKey) {
+  logger.warn(
+    'VITE_FIREBASE_API_KEY does not look like a Web API key (expected "AIza..."). ' +
+      'Auth/Firestore are disabled until a valid key is provided.',
+  );
+} else if (!configuredFirebase) {
   logger.warn('Firebase config incomplete — auth and watchlist/progress are disabled.');
 }
 
+const SAFE_PLACEHOLDER = 'unconfigured-placeholder-key';
+
 const firebaseConfig = {
-  // `getAuth()` throws synchronously on an empty apiKey, which would blank the
-  // entire app before the error boundary can mount. When Firebase is not
-  // configured we initialize with a harmless placeholder so the SDK loads;
-  // actual auth/Firestore usage is gated by `firebaseEnabled`.
-  apiKey: resolvedApiKey || 'unconfigured-placeholder-key',
+  // Only feed a real key to the SDK; otherwise use a placeholder the SDK
+  // tolerates without throwing. Real usage is gated by `firebaseEnabled`.
+  apiKey: configuredFirebase ? resolvedApiKey : SAFE_PLACEHOLDER,
   authDomain: env.firebase.authDomain || appletConfig.authDomain || 'localhost',
   projectId: resolvedProjectId || 'unconfigured',
   appId: env.firebase.appId || appletConfig.appId || 'unconfigured',
   storageBucket: env.firebase.storageBucket || appletConfig.storageBucket,
   messagingSenderId: env.firebase.messagingSenderId || appletConfig.messagingSenderId,
+  measurementId: env.firebase.measurementId || undefined,
 };
 
 const firestoreDatabaseId =
   env.firebase.firestoreDatabaseId || appletConfig.firestoreDatabaseId || undefined;
 
-const app = initializeApp(firebaseConfig);
+// Initialize defensively: if anything throws (e.g. an unexpected key format),
+// disable Firebase rather than crashing the whole app at import time.
+let initOk = true;
+let app: ReturnType<typeof initializeApp>;
+try {
+  app = initializeApp(firebaseConfig);
+} catch (error) {
+  logger.error('Firebase initialization failed; disabling Firebase features.', error);
+  initOk = false;
+  app = initializeApp({ apiKey: SAFE_PLACEHOLDER, projectId: 'unconfigured' }, 'fallback');
+}
+
+/** Whether Firebase can actually authenticate / read Firestore. */
+export const firebaseEnabled = configuredFirebase && initOk;
+
 export const db = firestoreDatabaseId ? getFirestore(app, firestoreDatabaseId) : getFirestore(app);
 export const auth = getAuth(app);
+
+// Analytics is optional and browser-only. Initialize lazily and defensively so
+// it never breaks SSR, tests, or environments without a measurementId.
+if (firebaseEnabled && env.firebase.measurementId && typeof window !== 'undefined') {
+  isSupported()
+    .then((supported) => {
+      if (supported) getAnalytics(app);
+    })
+    .catch(() => {
+      /* analytics is non-essential; ignore failures */
+    });
+}
 
 export enum OperationType {
   CREATE = 'create',
