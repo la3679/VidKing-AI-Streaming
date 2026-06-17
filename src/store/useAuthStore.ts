@@ -1,8 +1,9 @@
 import { create } from 'zustand';
-import { User } from 'firebase/auth';
+import { User, signOut } from 'firebase/auth';
 import { UserProfile } from '../types';
 import { auth, db } from '../lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { logger } from '../lib/logger';
 
 interface AuthState {
   user: User | null;
@@ -11,6 +12,7 @@ interface AuthState {
   setUser: (user: User | null) => void;
   fetchProfile: (uid: string) => Promise<void>;
   updateProfile: (profile: Partial<UserProfile>) => Promise<void>;
+  logout: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -26,27 +28,36 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
   fetchProfile: async (uid) => {
-    const docRef = doc(db, 'users', uid);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      set({ profile: docSnap.data() as UserProfile });
-    } else {
-      // Create default profile
-      const user = auth.currentUser;
-      if (user) {
-        const newProfile: UserProfile = {
-          uid: user.uid,
-          email: user.email || '',
-          displayName: user.displayName || '',
-          photoURL: user.photoURL || '',
-          preferences: {
-            favoriteGenres: [],
-            theme: 'dark'
-          }
-        };
-        await setDoc(docRef, newProfile);
-        set({ profile: newProfile });
+    try {
+      const docRef = doc(db, 'users', uid);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        set({ profile: docSnap.data() as UserProfile });
+      } else {
+        // Create default profile
+        const user = auth.currentUser;
+        if (user) {
+          const newProfile: UserProfile = {
+            uid: user.uid,
+            email: user.email || '',
+            displayName: user.displayName || '',
+            photoURL: user.photoURL || '',
+            preferences: { favoriteGenres: [], theme: 'dark' },
+          };
+          await setDoc(docRef, newProfile);
+          set({ profile: newProfile });
+        }
       }
+    } catch (error) {
+      // A profile read/write failure must not break the session.
+      logger.warn('Could not load user profile:', error);
+    }
+  },
+  logout: async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      logger.error('Sign out failed:', error);
     }
   },
   updateProfile: async (updates) => {

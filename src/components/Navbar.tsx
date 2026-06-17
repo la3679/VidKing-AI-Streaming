@@ -1,18 +1,30 @@
-import { Search, Sparkles } from 'lucide-react';
+import { useState } from 'react';
+import { Search, Sparkles, LogOut } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 import { useUIStore } from '../store/useUIStore';
 import { usePlayerStore } from '../store/usePlayerStore';
+import { useWatchlistStore } from '../store/useWatchlistStore';
+import { toast } from '../store/useToastStore';
 
 export const TopHeader = () => {
-  const { profile, user } = useAuthStore();
+  const { profile, user, logout } = useAuthStore();
   const { toggleAssistant, searchQuery, setSearchQuery, setIsAuthOpen } = useUIStore();
   const { trackInteraction } = usePlayerStore();
+  const { reset: resetWatchlist } = useWatchlistStore();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const handleSearchChange = (query: string) => {
     setSearchQuery(query);
     if (user && query.length > 3) {
       trackInteraction(user.uid, 'search', undefined, { query });
     }
+  };
+
+  const handleLogout = async () => {
+    setMenuOpen(false);
+    await logout();
+    resetWatchlist();
+    toast.success('Signed out');
   };
 
   return (
@@ -45,18 +57,45 @@ export const TopHeader = () => {
         <div className="h-6 w-[1px] bg-white/10 mx-2 hidden sm:block"></div>
 
         {profile ? (
-          <div className="flex items-center gap-4 group cursor-pointer">
-            <div className="text-right hidden sm:block">
-              <div className="text-[9px] text-white/30 uppercase font-black tracking-widest leading-none mb-1">Authenticated</div>
-              <div className="text-xs font-black tracking-tight">{profile.displayName || 'Discovery User'}</div>
-            </div>
-            <div className="w-10 h-10 rounded-xl border border-white/10 bg-white/5 overflow-hidden group-hover:border-brand/50 transition-all shadow-lg flex items-center justify-center">
-              {profile.photoURL ? (
-                <img src={profile.photoURL} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-              ) : (
-                <span className="text-xs font-black">{profile.displayName?.slice(0, 2).toUpperCase()}</span>
-              )}
-            </div>
+          <div className="relative">
+            <button
+              onClick={() => setMenuOpen((v) => !v)}
+              aria-label="Account menu"
+              aria-expanded={menuOpen}
+              aria-haspopup="menu"
+              className="flex items-center gap-4 group cursor-pointer"
+            >
+              <div className="text-right hidden sm:block">
+                <div className="text-[9px] text-white/30 uppercase font-black tracking-widest leading-none mb-1">Signed in</div>
+                <div className="text-xs font-black tracking-tight">{profile.displayName || profile.email || 'Member'}</div>
+              </div>
+              <div className="w-10 h-10 rounded-xl border border-white/10 bg-white/5 overflow-hidden group-hover:border-brand/50 transition-all shadow-lg flex items-center justify-center">
+                {profile.photoURL ? (
+                  <img src={profile.photoURL} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                ) : (
+                  <span className="text-xs font-black">
+                    {(profile.displayName || profile.email || 'U').slice(0, 2).toUpperCase()}
+                  </span>
+                )}
+              </div>
+            </button>
+            {menuOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} aria-hidden="true" />
+                <div
+                  role="menu"
+                  className="absolute right-0 mt-3 w-48 glass-card bg-black/80 border-white/10 p-2 z-50 shadow-2xl"
+                >
+                  <button
+                    role="menuitem"
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-bold text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" aria-hidden="true" /> Sign out
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         ) : (
           <button 
