@@ -192,7 +192,9 @@ export default function App() {
                           <img 
                             src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} 
                             alt="" 
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            loading="lazy"
+                            decoding="async"
                             referrerPolicy="no-referrer"
                           />
                           <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -254,7 +256,9 @@ export default function App() {
                           <img 
                             src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} 
                             alt="" 
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            loading="lazy"
+                            decoding="async"
                             referrerPolicy="no-referrer"
                           />
                           <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
