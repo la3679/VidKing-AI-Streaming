@@ -20,6 +20,8 @@ export interface UserProfile {
   preferences?: {
     favoriteGenres: string[];
     theme: 'dark' | 'light';
+    /** TMDB ids the user has "liked" (favorited). */
+    likedIds?: string[];
   };
 }
 

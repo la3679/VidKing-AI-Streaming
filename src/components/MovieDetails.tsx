@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { X, Play, Plus, ThumbsUp } from 'lucide-react';
+import { X, Play, Plus, Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Movie } from '../types';
 import { getImageUrl, getMovieDetails, getTvDetails } from '../lib/tmdb';
@@ -12,6 +12,7 @@ import { formatRuntime, formatYear, votePercent } from '../lib/format';
 import { logger } from '../lib/logger';
 import { Skeleton } from './states/Skeleton';
 import { AudioIcon } from './icons/AudioIcon';
+import { HeartIcon } from './icons/HeartIcon';
 import { buildTrailerEmbedUrl, sendYouTubeCommand } from '../lib/youtube';
 
 interface MovieDetailsProps {
@@ -21,15 +22,31 @@ interface MovieDetailsProps {
 }
 
 export const MovieDetails = ({ media, onClose, onPlay }: MovieDetailsProps) => {
-  const { user } = useAuthStore();
+  const { user, isLiked, toggleLike } = useAuthStore();
   const { trackInteraction } = usePlayerStore();
-  const { setSelectedActorId } = useUIStore();
+  const { setSelectedActorId, setIsAuthOpen } = useUIStore();
   const { toggleWatchlist, isInWatchlist } = useWatchlistStore();
   const [details, setDetails] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
   const [showTrailer, setShowTrailer] = useState(false);
+  const [liking, setLiking] = useState(false);
   const trailerRef = useRef<HTMLIFrameElement>(null);
+
+  const liked = isLiked(media.id.toString());
+
+  const handleLike = async () => {
+    if (!user) {
+      setIsAuthOpen(true);
+      return;
+    }
+    setLiking(true);
+    try {
+      await toggleLike(media.id.toString());
+    } finally {
+      setLiking(false);
+    }
+  };
 
   // Toggle audio via the YouTube IFrame API (no reload), inside the click
   // gesture so the browser permits sound. The trailer always *starts* muted
@@ -148,17 +165,26 @@ export const MovieDetails = ({ media, onClose, onPlay }: MovieDetailsProps) => {
               >
                 <Play className="w-6 h-6 fill-current" /> Play
               </button>
-              <button 
-                onClick={() => user ? toggleWatchlist(user.uid, media) : useUIStore.getState().setIsAuthOpen(true)}
-                className={`p-2 border rounded-full transition-all ${isInWatchlist(media.id.toString()) ? 'bg-brand border-brand text-white' : 'bg-black/40 border-white/20 hover:bg-white/10'}`}
+              <button
+                onClick={() => (user ? toggleWatchlist(user.uid, media) : setIsAuthOpen(true))}
+                aria-label={isInWatchlist(media.id.toString()) ? 'Remove from My List' : 'Add to My List'}
+                aria-pressed={isInWatchlist(media.id.toString())}
+                className={`p-2.5 border rounded-full transition-all active:scale-95 ${isInWatchlist(media.id.toString()) ? 'bg-brand border-brand text-white' : 'bg-black/40 border-white/20 hover:bg-white/10 hover:border-white/40'}`}
               >
                 <Plus className={`w-6 h-6 transition-transform ${isInWatchlist(media.id.toString()) ? 'rotate-45' : ''}`} />
               </button>
-              <button 
-                onClick={() => user && trackInteraction(user.uid, 'click', media.id.toString(), { action: 'like' })}
-                className="p-2 bg-black/40 border border-white/20 rounded-full hover:bg-white/10 transition-all active:scale-125"
+              <button
+                onClick={handleLike}
+                disabled={liking}
+                aria-label={!user ? 'Sign in to like' : liked ? 'Unlike' : 'Like'}
+                aria-pressed={liked}
+                className={`p-2.5 border rounded-full transition-all active:scale-95 disabled:opacity-60 ${liked ? 'bg-brand/20 border-brand text-brand' : 'bg-black/40 border-white/20 hover:bg-white/10 hover:border-white/40'}`}
               >
-                <ThumbsUp className="w-6 h-6" />
+                {liking ? (
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                ) : (
+                  <HeartIcon filled={liked} className={`w-6 h-6 transition-transform ${liked ? 'scale-110' : ''}`} />
+                )}
               </button>
             </div>
           </div>

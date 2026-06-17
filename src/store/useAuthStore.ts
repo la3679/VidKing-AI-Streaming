@@ -4,6 +4,7 @@ import { UserProfile } from '../types';
 import { auth, db } from '../lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { logger } from '../lib/logger';
+import { toast } from './useToastStore';
 
 interface AuthState {
   user: User | null;
@@ -12,6 +13,9 @@ interface AuthState {
   setUser: (user: User | null) => void;
   fetchProfile: (uid: string) => Promise<void>;
   updateProfile: (profile: Partial<UserProfile>) => Promise<void>;
+  /** Toggles a "like"/favorite for a TMDB id (persisted in preferences). */
+  toggleLike: (tmdbId: string) => Promise<void>;
+  isLiked: (tmdbId: string) => boolean;
   logout: () => Promise<void>;
 }
 
@@ -53,6 +57,35 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       logger.warn('Could not load user profile:', error);
     }
   },
+  isLiked: (tmdbId) => Boolean(get().profile?.preferences?.likedIds?.includes(tmdbId)),
+
+  toggleLike: async (tmdbId) => {
+    const { user, profile } = get();
+    if (!user || !profile) return; // caller prompts sign-in for guests
+
+    const prefs = profile.preferences ?? { favoriteGenres: [], theme: 'dark' as const };
+    const current = prefs.likedIds ?? [];
+    const wasLiked = current.includes(tmdbId);
+    const nextLiked = wasLiked ? current.filter((id) => id !== tmdbId) : [...current, tmdbId];
+
+    // Optimistic update with rollback on failure.
+    const previous = profile;
+    set({ profile: { ...profile, preferences: { ...prefs, likedIds: nextLiked } } });
+
+    try {
+      await setDoc(
+        doc(db, 'users', user.uid),
+        { preferences: { ...prefs, likedIds: nextLiked } },
+        { merge: true },
+      );
+      toast.success(wasLiked ? 'Removed from your likes' : 'Added to your likes');
+    } catch (error) {
+      set({ profile: previous });
+      logger.error('Failed to update likes:', error);
+      toast.error('Could not update likes. Please try again.');
+    }
+  },
+
   logout: async () => {
     try {
       await signOut(auth);
