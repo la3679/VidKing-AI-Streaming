@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { ChevronLeft, ChevronRight, Play, Plus, ThumbsUp } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Play, Plus } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Movie } from '../types';
 import { getImageUrl } from '../lib/tmdb';
