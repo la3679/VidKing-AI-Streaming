@@ -49,9 +49,18 @@ function resolveFirebaseConfig(): FirebaseClientConfig {
 
 const firebase = resolveFirebaseConfig();
 
-/** A Firebase config is usable for Auth/Firestore only if the core fields exist. */
+/**
+ * A Firebase config is usable only if the core fields exist AND the apiKey looks
+ * like a real Web API key (`AIza...`). A common mistake is pasting the App ID
+ * into the apiKey field, which the SDK rejects with `auth/invalid-api-key`.
+ */
+const firebaseApiKeyLooksValid = /^AIza[0-9A-Za-z_-]{20,}$/.test(firebase.apiKey);
 const firebaseEnabled = Boolean(
-  firebase.apiKey && firebase.authDomain && firebase.projectId && firebase.appId,
+  firebase.apiKey &&
+    firebase.authDomain &&
+    firebase.projectId &&
+    firebase.appId &&
+    firebaseApiKeyLooksValid,
 );
 
 const tmdbApiKey = str(raw.VITE_TMDB_API_KEY);

@@ -319,8 +319,8 @@ export default function App() {
               </>
             )}
 
-            <footer className="pt-24 pb-12 border-t border-white/5 opacity-40">
-              <div className="flex flex-col md:flex-row justify-between items-center gap-6 text-[9px] font-black uppercase tracking-[0.4em]">
+            <footer className="pt-24 pb-12 border-t border-white/5">
+              <div className="flex flex-col md:flex-row justify-between items-center gap-6 text-[9px] font-black uppercase tracking-[0.4em] opacity-40">
                 <span className="text-brand">VIDKING STREAMING</span>
                 <div className="flex gap-12">
                   <a href="#" className="hover:text-white transition-colors">Privacy</a>
@@ -328,6 +328,19 @@ export default function App() {
                   <a href="#" className="hover:text-white transition-colors">Help</a>
                 </div>
               </div>
+              {/* TMDB requires attribution for use of their API. */}
+              <p className="mt-6 text-center text-[10px] text-white/30 leading-relaxed normal-case tracking-normal">
+                This product uses the{' '}
+                <a
+                  href="https://www.themoviedb.org/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-white"
+                >
+                  TMDB
+                </a>{' '}
+                API but is not endorsed or certified by TMDB. Streaming provided via VidKing.
+              </p>
             </footer>
           </div>
         </div>
