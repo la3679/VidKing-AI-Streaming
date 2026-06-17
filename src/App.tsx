@@ -156,7 +156,7 @@ export default function App() {
         <TopHeader />
         
         <div className="flex-1 overflow-y-auto scrollbar-hide">
-          <div className="px-8 pb-12 space-y-12">
+          <div className="px-4 sm:px-6 lg:px-8 pb-12 space-y-12">
             {isWatchlistOpen ? (
               <div className="pt-8 min-h-screen">
                 <div className="flex items-center justify-between mb-8">
@@ -175,9 +175,11 @@ export default function App() {
                 {watchlistArr.length > 0 ? (
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6" aria-label="Saved titles">
                     {watchlistArr.map((movie: any) => (
-                      <div 
-                        key={movie.tmdbId} 
-                        className="group cursor-pointer" 
+                      <button
+                        type="button"
+                        key={movie.tmdbId}
+                        className="group cursor-pointer text-left"
+                        aria-label={`Open ${movie.title}`}
                         onClick={() => setSelectedMedia({
                           id: parseInt(movie.tmdbId),
                           title: movie.title,
@@ -186,7 +188,7 @@ export default function App() {
                           backdrop_path: movie.poster_path // Fallback
                         } as any)}
                       >
-                        <div className="aspect-[2/3] rounded-2xl overflow-hidden border border-white/5 relative group-hover:border-brand/40 transition-all shadow-xl">
+                        <div className="lift aspect-[2/3] rounded-2xl overflow-hidden border border-white/5 relative group-hover:border-brand/40 transition-all shadow-xl">
                           <img 
                             src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} 
                             alt="" 
@@ -202,7 +204,7 @@ export default function App() {
                         <h3 className="mt-4 text-xs font-black uppercase tracking-tight truncate group-hover:text-brand transition-colors">
                           {movie.title}
                         </h3>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 ) : (
@@ -241,8 +243,14 @@ export default function App() {
                 ) : searchResults.length > 0 ? (
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
                     {searchResults.map((movie) => (
-                      <div key={movie.id} className="group cursor-pointer" onClick={() => setSelectedMedia(movie)}>
-                        <div className="aspect-[2/3] rounded-2xl overflow-hidden border border-white/5 relative group-hover:border-brand/40 transition-all shadow-xl">
+                      <button
+                        type="button"
+                        key={movie.id}
+                        className="group cursor-pointer text-left"
+                        aria-label={`Open ${movie.title || movie.name}`}
+                        onClick={() => setSelectedMedia(movie)}
+                      >
+                        <div className="lift aspect-[2/3] rounded-2xl overflow-hidden border border-white/5 relative group-hover:border-brand/40 transition-all shadow-xl">
                           <img 
                             src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} 
                             alt="" 
@@ -258,7 +266,7 @@ export default function App() {
                         <h3 className="mt-4 text-xs font-black uppercase tracking-tight truncate group-hover:text-brand transition-colors">
                           {movie.title || movie.name}
                         </h3>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 ) : (
