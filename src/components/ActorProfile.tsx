@@ -73,37 +73,68 @@ export const ActorProfile = () => {
             </div>
           ) : (
             <div className="pb-20">
-              {/* Header section */}
-              <div className="relative h-[400px]">
-                <div className="absolute inset-0">
-                  <img 
-                    src={getImageUrl(details?.profile_path)} 
-                    className="w-full h-full object-cover object-top"
-                    alt=""
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/60 to-transparent" />
+              {/* Header: portrait card over a blurred backdrop fill so the
+                  full face is always visible (portrait images are no longer
+                  cropped to the hairline by a wide cinematic band). */}
+              <div className="relative">
+                <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
+                  {details?.profile_path && (
+                    <img
+                      src={getImageUrl(details.profile_path, 'w780')}
+                      alt=""
+                      className="w-full h-full object-cover scale-110 blur-2xl opacity-25"
+                      referrerPolicy="no-referrer"
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/85 to-surface/50" />
                 </div>
-                
-                <div className="absolute bottom-0 left-0 p-12 w-full">
-                  <motion.h2 
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="text-6xl md:text-8xl font-display font-black tracking-tighter uppercase mb-4"
-                  >
-                    {details?.name}
-                  </motion.h2>
-                  <div className="flex items-center gap-6 text-sm font-black uppercase tracking-[0.2em] text-white/60">
-                    <span>{details?.known_for_department}</span>
-                    <span className="w-1 h-1 rounded-full bg-brand" />
-                    <span>{details?.place_of_birth}</span>
-                    <span className="w-1 h-1 rounded-full bg-brand" />
-                    <span>{details?.birthday}</span>
+
+                <div className="relative flex flex-col sm:flex-row items-center sm:items-end gap-6 sm:gap-8 px-6 sm:px-10 lg:px-12 pt-16 pb-8">
+                  {/* Portrait card — face framed, never distorted */}
+                  <div className="w-32 sm:w-44 lg:w-52 shrink-0 aspect-[2/3] rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-white/5 flex items-center justify-center">
+                    {details?.profile_path ? (
+                      <img
+                        src={getImageUrl(details.profile_path, 'w500')}
+                        alt={details?.name || 'Portrait'}
+                        className="w-full h-full object-cover object-center"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <span className="text-4xl font-display font-black text-white/30">
+                        {(details?.name || '?')
+                          .split(' ')
+                          .map((w: string) => w[0])
+                          .slice(0, 2)
+                          .join('')}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Name + metadata */}
+                  <div className="text-center sm:text-left min-w-0">
+                    <motion.h2
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-4xl sm:text-5xl lg:text-6xl font-display font-black tracking-tighter uppercase mb-3 break-words"
+                    >
+                      {details?.name}
+                    </motion.h2>
+                    <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-3 gap-y-1 text-xs sm:text-sm font-black uppercase tracking-[0.2em] text-white/60">
+                      {[details?.known_for_department, details?.place_of_birth, details?.birthday]
+                        .filter(Boolean)
+                        .map((item: string, i: number) => (
+                          <span key={i} className="flex items-center gap-3">
+                            {i > 0 && <span className="w-1 h-1 rounded-full bg-brand" />}
+                            <span>{item}</span>
+                          </span>
+                        ))}
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Bio Section */}
-              <div className="px-12 py-12 grid grid-cols-1 lg:grid-cols-3 gap-16">
+              <div className="px-6 sm:px-10 lg:px-12 py-10 lg:py-12 grid grid-cols-1 lg:grid-cols-3 gap-10 lg:gap-16">
                 <div className="lg:col-span-2 space-y-8">
                   <div>
                     <h3 className="text-xs font-black uppercase tracking-[0.3em] text-brand mb-4">Biography</h3>
