@@ -276,6 +276,8 @@ export const MovieDetails = ({ media, onClose, onPlay }: MovieDetailsProps) => {
                         src={getImageUrl(rec.backdrop_path, 'w342')}
                         className="w-full h-full object-cover"
                         alt=""
+                        loading="lazy"
+                        decoding="async"
                         referrerPolicy="no-referrer"
                       />
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">

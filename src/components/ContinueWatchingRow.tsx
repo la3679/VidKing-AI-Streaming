@@ -91,6 +91,8 @@ export const ContinueWatchingRow = () => {
               <img
                 src={getImageUrl(movie.backdrop_path, 'w780')}
                 alt=""
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 referrerPolicy="no-referrer"
               />

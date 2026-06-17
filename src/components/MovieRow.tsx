@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { memo, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { PlayIcon, AddIcon } from './icons';
 import { motion } from 'motion/react';
@@ -17,7 +17,7 @@ interface MovieRowProps {
   onViewAll?: () => void;
 }
 
-export const MovieRow = ({ title, movies, isLarge, onViewAll }: MovieRowProps) => {
+const MovieRowBase = ({ title, movies, isLarge, onViewAll }: MovieRowProps) => {
   const rowRef = useRef<HTMLDivElement>(null);
   const { setSelectedMedia, setIsAuthOpen } = useUIStore();
   const { user } = useAuthStore();
@@ -90,9 +90,11 @@ export const MovieRow = ({ title, movies, isLarge, onViewAll }: MovieRowProps) =
                 isLarge ? 'w-48 md:w-56 aspect-[2/3]' : 'w-64 md:w-72 aspect-video'
               }`}
             >
-              <img 
-                src={getImageUrl(isLarge ? movie.poster_path : movie.backdrop_path, isLarge ? 'w500' : 'w780')} 
+              <img
+                src={getImageUrl(isLarge ? movie.poster_path : movie.backdrop_path, isLarge ? 'w500' : 'w780')}
                 alt={movie.title || movie.name}
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 referrerPolicy="no-referrer"
               />
@@ -135,3 +137,7 @@ export const MovieRow = ({ title, movies, isLarge, onViewAll }: MovieRowProps) =
     </div>
   );
 };
+
+// Memoized: rows hold stable movie arrays, so they skip re-render when unrelated
+// app state changes.
+export const MovieRow = memo(MovieRowBase);
