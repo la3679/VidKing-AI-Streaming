@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { X, Play, Plus, ThumbsUp, Volume2, VolumeX } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { X, Play, Plus, ThumbsUp } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Movie } from '../types';
 import { getImageUrl, getMovieDetails, getTvDetails } from '../lib/tmdb';
@@ -11,6 +11,8 @@ import { useEscapeKey } from '../hooks/useEscapeKey';
 import { formatRuntime, formatYear, votePercent } from '../lib/format';
 import { logger } from '../lib/logger';
 import { Skeleton } from './states/Skeleton';
+import { AudioIcon } from './icons/AudioIcon';
+import { buildTrailerEmbedUrl, sendYouTubeCommand } from '../lib/youtube';
 
 interface MovieDetailsProps {
   media: Movie;
@@ -27,6 +29,17 @@ export const MovieDetails = ({ media, onClose, onPlay }: MovieDetailsProps) => {
   const [loading, setLoading] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
   const [showTrailer, setShowTrailer] = useState(false);
+  const trailerRef = useRef<HTMLIFrameElement>(null);
+
+  // Toggle audio via the YouTube IFrame API (no reload), inside the click
+  // gesture so the browser permits sound. The trailer always *starts* muted
+  // (autoplay requirement); this is the only thing that unmutes it.
+  const toggleMute = () => {
+    const next = !isMuted;
+    sendYouTubeCommand(trailerRef.current, next ? 'mute' : 'unMute');
+    if (!next) sendYouTubeCommand(trailerRef.current, 'setVolume', [100]);
+    setIsMuted(next);
+  };
 
   useEffect(() => {
     const fetch = async () => {
@@ -50,8 +63,10 @@ export const MovieDetails = ({ media, onClose, onPlay }: MovieDetailsProps) => {
       }
     };
     fetch();
-    
-    // Auto-show trailer after 2 seconds
+
+    // Reset trailer/audio state for the new title, then reveal the trailer.
+    setShowTrailer(false);
+    setIsMuted(true);
     const timer = setTimeout(() => setShowTrailer(true), 2000);
     return () => clearTimeout(timer);
   }, [media, user, trackInteraction]);
@@ -93,18 +108,21 @@ export const MovieDetails = ({ media, onClose, onPlay }: MovieDetailsProps) => {
           {showTrailer && trailer ? (
             <div className="absolute inset-0 z-0">
               <iframe
+                ref={trailerRef}
+                title={`${media.title || media.name} trailer`}
                 className="w-full h-full scale-[1.35] pointer-events-none"
-                src={`https://www.youtube.com/embed/${trailer.key}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${trailer.key}&rel=0&modestbranding=1&showinfo=0&iv_load_policy=3`}
-                frameBorder="0"
+                src={buildTrailerEmbedUrl(trailer.key)}
                 allow="autoplay; encrypted-media"
                 allowFullScreen
               ></iframe>
               <div className="absolute inset-0 bg-gradient-to-t from-[#181818] via-transparent to-transparent" />
-              <button 
-                onClick={() => setIsMuted(!isMuted)}
-                className="absolute bottom-8 right-8 p-3 bg-black/40 border border-white/20 rounded-full hover:bg-white/10 transition-all z-20"
+              <button
+                onClick={toggleMute}
+                aria-label={isMuted ? 'Unmute trailer' : 'Mute trailer'}
+                aria-pressed={!isMuted}
+                className="absolute bottom-8 right-8 p-3 bg-black/40 border border-white/20 rounded-full hover:bg-white/10 hover:border-white/40 transition-all z-20 active:scale-95"
               >
-                {isMuted ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
+                <AudioIcon muted={isMuted} className="w-6 h-6" />
               </button>
             </div>
           ) : (
