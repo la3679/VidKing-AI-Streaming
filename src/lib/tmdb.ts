@@ -29,13 +29,6 @@ export const getTvDetails = async (id: string) => {
   return data;
 };
 
-export const searchContent = async (query: string) => {
-  const { data } = await tmdb.get(`/search/multi`, {
-    params: { query }
-  });
-  return data.results;
-};
-
 export const getDiscover = async (params: any) => {
   const { data } = await tmdb.get(`/discover/movie`, { params });
   return data.results;
