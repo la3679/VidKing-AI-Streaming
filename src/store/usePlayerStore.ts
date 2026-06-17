@@ -1,8 +1,27 @@
 import { create } from 'zustand';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  limit,
+  orderBy,
+  query,
+  setDoc,
+  serverTimestamp,
+} from 'firebase/firestore';
 import { WatchProgress } from '../types';
 import { logger } from '../lib/logger';
+
+export interface ContinueWatchingItem {
+  tmdbId: string;
+  type: 'movie' | 'tv';
+  season?: number;
+  episode?: number;
+  currentTime: number;
+  completionRate: number;
+}
 
 export interface ResumeInfo {
   /** Saved playback position in seconds. */
@@ -16,6 +35,8 @@ interface PlayerState {
   saveProgress: (userId: string, progress: Partial<WatchProgress>) => Promise<void>;
   /** Fetches saved progress for resume. Returns null when none / unavailable. */
   getProgress: (userId: string, tmdbId: string) => Promise<ResumeInfo | null>;
+  /** In-progress (not finished) titles, most-recently watched first. */
+  getContinueWatching: (userId: string) => Promise<ContinueWatchingItem[]>;
   trackInteraction: (
     userId: string,
     type: 'click' | 'view' | 'skip' | 'pause' | 'rewatch' | 'search',
@@ -67,6 +88,35 @@ export const usePlayerStore = create<PlayerState>((set) => ({
     } catch (error) {
       logger.warn('Could not load saved progress:', error);
       return null;
+    }
+  },
+
+  getContinueWatching: async (userId) => {
+    try {
+      const ref = collection(db, `users/${userId}/progress`);
+      const snap = await getDocs(query(ref, orderBy('updatedAt', 'desc'), limit(20)));
+      return snap.docs
+        .map((d) => {
+          const data = d.data() as Record<string, any>;
+          const duration = Number(data.duration) || 0;
+          const currentTime = Number(data.timestamp) || 0;
+          const completionRate =
+            Number(data.completionRate) || (duration ? currentTime / duration : 0);
+          return {
+            tmdbId: String(data.tmdbId ?? d.id),
+            type: (data.type === 'tv' ? 'tv' : 'movie') as 'movie' | 'tv',
+            season: data.season,
+            episode: data.episode,
+            currentTime,
+            completionRate,
+          };
+        })
+        // Started but not effectively finished.
+        .filter((i) => i.completionRate > 0.02 && i.completionRate < 0.95)
+        .slice(0, 12);
+    } catch (error) {
+      logger.warn('Could not load continue-watching:', error);
+      return [];
     }
   },
 
