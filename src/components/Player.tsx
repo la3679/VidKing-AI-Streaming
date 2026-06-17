@@ -26,8 +26,16 @@ interface PlayerProps {
 
 /** Save at most once per this interval during continuous playback. */
 const SAVE_THROTTLE_MS = 10_000;
-/** If the iframe hasn't loaded within this window, surface an error. */
-const LOAD_TIMEOUT_MS = 15_000;
+/**
+ * If the iframe hasn't loaded within this window AFTER it has actually mounted,
+ * surface an error. Generous so a slow third-party embed isn't flagged early.
+ */
+const LOAD_TIMEOUT_MS = 25_000;
+/**
+ * Hard cap on how long we wait for the resume position before mounting the
+ * iframe anyway. A slow/failing Firestore read must never block playback.
+ */
+const RESUME_CAP_MS = 1500;
 /** Don't offer resume once a title is essentially finished. */
 const RESUME_MAX_COMPLETION = 0.95;
 
@@ -52,6 +60,11 @@ export const Player = ({ tmdbId, type, season = 1, episode = 1, onClose }: Playe
   // the correct start time. Falls through quickly when not logged in / no data.
   useEffect(() => {
     let cancelled = false;
+    // Mount the iframe after at most RESUME_CAP_MS even if the resume read is
+    // slow or hangs — playback must never wait on Firestore.
+    const cap = setTimeout(() => {
+      if (!cancelled) setResumeResolved(true);
+    }, RESUME_CAP_MS);
     (async () => {
       if (user && type) {
         const resume = await getProgress(user.uid, tmdbId);
@@ -68,6 +81,7 @@ export const Player = ({ tmdbId, type, season = 1, episode = 1, onClose }: Playe
     })();
     return () => {
       cancelled = true;
+      clearTimeout(cap);
     };
   }, [user, tmdbId, type, getProgress]);
 
@@ -130,20 +144,27 @@ export const Player = ({ tmdbId, type, season = 1, episode = 1, onClose }: Playe
     return () => window.removeEventListener('message', handleMessage);
   }, [user, tmdbId, type, season, episode, saveProgress]);
 
-  // Treat a stalled iframe load as an error so users aren't left staring at black.
+  // Treat a stalled iframe load as an error — but only once the iframe has
+  // actually mounted (resume resolved). This prevents a false "Unable to load"
+  // when the real delay is the resume read, not the embed.
   useEffect(() => {
-    if (!embed.url || loadState !== 'loading') return;
+    if (!resumeResolved || !embed.url || loadState !== 'loading') return;
     loadTimerRef.current = setTimeout(() => {
       setLoadState((s) => (s === 'loading' ? 'error' : s));
     }, LOAD_TIMEOUT_MS);
     return () => {
       if (loadTimerRef.current) clearTimeout(loadTimerRef.current);
     };
-  }, [embed.url, loadState]);
+  }, [resumeResolved, embed.url, loadState]);
 
   const handleIframeLoad = useCallback(() => {
     if (loadTimerRef.current) clearTimeout(loadTimerRef.current);
     setLoadState('ready');
+  }, []);
+
+  const handleIframeError = useCallback(() => {
+    if (loadTimerRef.current) clearTimeout(loadTimerRef.current);
+    setLoadState('error');
   }, []);
 
   const handleRetry = useCallback(() => {
@@ -255,6 +276,7 @@ export const Player = ({ tmdbId, type, season = 1, episode = 1, onClose }: Playe
                 src={embed.url}
                 className="w-full h-full"
                 onLoad={handleIframeLoad}
+                onError={handleIframeError}
                 allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
                 allowFullScreen
                 referrerPolicy="origin"

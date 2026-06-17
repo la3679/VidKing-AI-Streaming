@@ -3,6 +3,33 @@
 This document records how VidKing playback is integrated, what was verified, and
 how to diagnose problems.
 
+## Update 2026-06-17 — "Unable to load stream" root cause & fix
+
+**Symptom:** clicking Play showed "Unable to load stream. The player did not respond…".
+
+**Root cause (our bug, not VidKing):** `Player.tsx` only rendered the iframe after
+`resumeResolved` became true, and that flag was set only when `getProgress()` (a
+Firestore `getDoc`) resolved. When Firestore is unavailable/slow (e.g. the database
+isn't created or rules aren't deployed), that read hangs, the iframe never mounts, and
+the 15s load timeout fired the error — even though the embed itself is fine.
+
+**Evidence the embed works in-browser:** injecting
+`https://www.vidking.net/embed/movie/550?...` as an iframe in the running app fired
+`onload` (the embed is reachable and not blocked by an ad blocker / X-Frame-Options).
+`curl` of the embed endpoints returns HTTP 200 with no `X-Frame-Options`/CSP
+`frame-ancestors`.
+
+**Fix:**
+- The iframe now mounts after at most `RESUME_CAP_MS` (1.5s) regardless of the resume
+  read — Firestore can never block playback.
+- The load-timeout (now 25s) starts only **after** the iframe actually mounts, and the
+  iframe has an `onError` handler. Retry rebuilds the iframe.
+
+**Note:** Play is gated behind sign-in (`App.handlePlay`). Full end-to-end playback for a
+signed-in user requires Google sign-in (can't be automated headlessly), but the embed
+load and the gate/timeout fix are verified.
+
+
 ## How it works
 
 Playback is an `<iframe>` pointing at VidKing's embed endpoint. The integration
