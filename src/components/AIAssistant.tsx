@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Send, Sparkles, X, BrainCircuit } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useUIStore } from '../store/useUIStore';
-import { ai, MODELS } from '../lib/gemini';
+import { chat, ApiError, type ChatMessage } from '../lib/api';
 import { useAuthStore } from '../store/useAuthStore';
 import ReactMarkdown from 'react-markdown';
 
@@ -20,30 +20,22 @@ export const AIAssistant = () => {
 
   const handleSend = async () => {
     if (!input.trim() || isTyping) return;
-    
+
     const userMsg = input.trim();
+    const history: ChatMessage[] = [...messages, { role: 'user', content: userMsg }];
     setInput('');
-    setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
+    setMessages(history);
     setIsTyping(true);
 
     try {
-      // Use Gemini to respond
-      const response = await ai.models.generateContent({
-        model: MODELS.flash,
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: `You are VidKing AI, an advanced streaming copilot. User ${profile?.displayName || 'Guest'} says: ${userMsg}. Provide cinematic recommendations, explain plots, or answer entertainment questions. Keep it sleek and professional.` }]
-          }
-        ],
-        config: {
-          systemInstruction: "You are VidKing AI Streaming Assistant. Expert in cinema, TV, and media analytics. You provide deep insights and personalized recommendations."
-        }
-      });
-
-      setMessages(prev => [...prev, { role: 'assistant', content: response.text || "I'm having trouble processing that right now." }]);
+      const { reply } = await chat(history, profile?.displayName || undefined);
+      setMessages((prev) => [...prev, { role: 'assistant', content: reply }]);
     } catch (error) {
-      setMessages(prev => [...prev, { role: 'assistant', content: "Error connecting to VidKing Intelligence." }]);
+      const content =
+        error instanceof ApiError && error.isUnavailable
+          ? 'The AI copilot is not available right now. Please try again later.'
+          : 'I had trouble reaching the AI service. Please check your connection and try again.';
+      setMessages((prev) => [...prev, { role: 'assistant', content }]);
     } finally {
       setIsTyping(false);
     }
