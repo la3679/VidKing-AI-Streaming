@@ -9,6 +9,30 @@
   --font-display: "Outfit", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* ── Design tokens ──────────────────────────────────────────────────── */
+  /* Radius scale */
+  --radius-card: 1rem;
+  --radius-pill: 9999px;
+
+  /* Elevation / shadows (tuned for a dark cinematic surface) */
+  --shadow-soft: 0 8px 24px -8px rgba(0, 0, 0, 0.55);
+  --shadow-card: 0 16px 40px -12px rgba(0, 0, 0, 0.7);
+  --shadow-brand: 0 0 40px rgba(229, 9, 20, 0.18);
+
+  /* Motion: durations + easings (premium, calm) */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out-soft: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 160ms;
+  --dur-base: 280ms;
+  --dur-slow: 600ms;
+
+  /* Z-index scale (documents existing stacking usage) */
+  --z-nav: 50;
+  --z-overlay: 100;
+  --z-modal: 150;
+  --z-player: 200;
+  --z-toast: 400;
 }
 
 @layer base {
@@ -140,6 +164,32 @@
   }
   .markdown-body code {
     @apply bg-white/10 rounded px-1 py-0.5 text-[0.85em] font-mono;
+  }
+
+  /* Subtle entrance reveal for sections/cards. Animates only transform/opacity
+     (compositor-friendly). Neutralized by the reduced-motion rule above. */
+  .reveal {
+    opacity: 0;
+    transform: translateY(16px);
+    animation: reveal-in var(--dur-slow) var(--ease-out-soft) forwards;
+  }
+  @keyframes reveal-in {
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* Gentle hover lift used by cards/tiles. */
+  .lift {
+    transition:
+      transform var(--dur-base) var(--ease-out-soft),
+      box-shadow var(--dur-base) var(--ease-out-soft);
+    will-change: transform;
+  }
+  .lift:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-card);
   }
 }
 
