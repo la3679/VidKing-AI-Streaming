@@ -46,12 +46,14 @@ export const MovieRow = ({ title, movies, isLarge, onViewAll }: MovieRowProps) =
           {title}
         </h2>
         {onViewAll && (
-          <div 
+          <button
+            type="button"
             onClick={onViewAll}
+            aria-label={`View all in ${title}`}
             className="text-[10px] text-brand font-black cursor-pointer hover:underline tracking-widest"
           >
             VIEW ALL
-          </div>
+          </button>
         )}
       </div>
 
