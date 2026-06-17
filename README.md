@@ -1,101 +1,175 @@
-# VidKing | Premium Streaming Experience
+# VidKing — AI Streaming
 
-VidKing is a cutting-edge, full-stack video streaming platform designed with a high-fidelity user interface inspired by world-class streaming services. Built for performance and immersion, VidKing combines a cinematic "Netflix x Disney+ Hotstar" aesthetic with powerful content discovery features.
+A production-style movie & TV streaming front end with an AI copilot, built on
+**Vite + React 19 + TypeScript**. It pairs the [TMDB](https://www.themoviedb.org/)
+catalog with [VidKing](https://www.vidking.net/) embed playback, Firebase auth &
+Firestore for watchlist/progress, and a small **Express** backend that proxies
+Google Gemini so no AI key is ever shipped to the browser.
 
-## 🚀 Key Features
+> This is a portfolio/demo project. VidKing aggregates third-party streams;
+> availability is outside this app's control. See [Limitations](#limitations).
 
-- **Immersive Hero Experience**: Dynamic high-definition hero section with auto-playing movie trailers, interactive volume controls, and metadata overlays.
-- **Deep Content Discovery**: 
-  - **Global Multi-Search**: Instantly find movies, TV shows, and cast members using a unified search architecture that provides real-time results.
-  - **Actor Profiles**: Explore dedicated talent pages featuring full biographies, career metrics, and popularity-sorted filmographies.
-  - **Genre-Based Categorization**: Curated collections for Thrillers, Comedies, Horrors, and VidKing Originals.
-- **Personalized Library**: 
-  - **Real-time Watchlist**: Save your favorite titles to a persistent library cross-synced via Firebase.
-  - **User Progress**: Resume watching where you left off with synchronized watch history.
-  - **Audience Insights**: Context-aware suggestions based on content metadata and audience reception.
-- **Cinematic UI/UX**:
-  - **Motion Engine**: Fluid transitions, staggered layout animations, and interactive hover states powered by Modern Motion (Framer Motion).
-  - **Responsive Design**: A tailor-made experience that scales gracefully from ultra-wide desktops to mobile devices.
-  - **Premium Aesthetic**: Sleek glassmorphism, high-contrast typography, and a "Bento-grid" inspired dashboard.
-- **Secure Infrastructure**:
-  - **Firebase Auth**: Secure Google-based authentication with session management.
-  - **Firestore Real-time DB**: Low-latency data synchronization for user progress and watchlists.
-  - **Hardened Security Rules**: Robust Attribute-Based Access Control (ABAC) protecting user data and preventing unauthorized access.
+## Features
 
-## 🛠 Tech Stack
+- **Browse & discover** — Trending, Top Rated, and genre rows (Action, Comedy,
+  Sci-Fi, Horror, Drama) plus popular TV, powered by a typed, cached TMDB client.
+- **Search** — debounced, request-cancelling multi-search across movies & TV.
+- **Title details** — backdrop/trailer, rating, year, runtime, genres, cast, and
+  recommendations, with Play and Watchlist actions.
+- **VidKing player** — origin-validated `postMessage` handling, throttled progress
+  saving, **resume from last position**, error UI with retry, and a dev diagnostics
+  panel. See [STREAMING_DEBUG.md](STREAMING_DEBUG.md).
+- **AI copilot** — streaming recommendations and plot help via a backend Gemini
+  proxy, with thinking/success/error/unavailable states, quick actions, safe
+  markdown rendering, and per-user history.
+- **Accounts** — Google, GitHub, and email/password auth (Firebase).
+- **Watchlist & Continue Watching** — optimistic updates, toasts, and a
+  resume-friendly row sourced from saved progress.
+- **Resilient UX** — skeleton loaders, empty/error states with retry, an app-level
+  error boundary, a missing-config banner, accessible controls, and reduced-motion
+  support.
 
-- **Frontend Core**: React 19, TypeScript, Vite
-- **Styling**: Tailwind CSS 4.0 (Utility-first, high-performance CSS engine)
-- **State Management**: Zustand (Atomic, high-speed global state stores)
-- **Animations**: Motion (formerly Framer Motion) for physics-based UI transitions
-- **Backend Services**: Firebase (Authentication, Firestore NoSQL Database)
-- **API Integration**: TMDB (The Movie Database) for industry-standard metadata
-- **Icons**: Lucide React (High-consistency vector icons)
+## Tech stack
 
-## 📦 Project Structure
+| Area      | Choice |
+| --------- | ------ |
+| Build/UI  | Vite 6, React 19, TypeScript 5.8 |
+| Styling   | Tailwind CSS v4, Motion (Framer Motion) |
+| State     | Zustand |
+| Data      | TMDB API, Firebase Auth + Firestore |
+| AI        | Google Gemini via Express proxy (`@google/genai`) |
+| Streaming | VidKing iframe embeds |
+| Testing   | Vitest, React Testing Library, Playwright (e2e) |
+| CI/Deploy | GitHub Actions, Vercel |
+
+## Architecture
+
+```
+Browser (React SPA)
+  ├── lib/tmdb.ts        typed TMDB client (cache, abort, genre enum)
+  ├── lib/vidking.ts     embed URL builder + postMessage parser/guards
+  ├── lib/api.ts         typed client for the backend
+  ├── lib/env.ts         validated, typed env access
+  ├── store/*            Zustand stores (auth, ui, watchlist, player, toast)
+  └── components/*        UI, states/, skeletons, player, assistant
+        │
+        │  /api/*  (Vite proxy in dev, same-origin on Vercel)
+        ▼
+Express backend (server/, deployed as a Vercel function via api/index.ts)
+  ├── routes/ai.ts       /api/ai/chat, /api/ai/rank  (zod-validated)
+  ├── routes/health.ts   /api/health, /api/diagnostics (dev)
+  ├── lib/gemini.ts      server-only Gemini client (holds GEMINI_API_KEY)
+  └── middleware/        CORS, rate limit, JSON error envelope
+```
+
+The Gemini key lives **only** on the server. Firebase reads/writes happen
+client-side under Firestore security rules ([firestore.rules](firestore.rules)).
+
+## Prerequisites
+
+- Node.js 20+
+- A [TMDB API key](https://www.themoviedb.org/settings/api)
+- A Firebase project (Auth + Firestore) — optional; the app runs without it but
+  sign-in, watchlist, and progress are disabled with a clear banner
+- A [Google Gemini API key](https://aistudio.google.com/app/apikey) — optional;
+  the AI copilot degrades gracefully when absent
+
+## Environment variables
+
+Copy [`.env.example`](.env.example) to `.env.local` and fill in values.
+
+| Variable | Scope | Required | Purpose |
+| -------- | ----- | -------- | ------- |
+| `VITE_TMDB_API_KEY` | client | yes | TMDB catalog & search |
+| `VITE_API_BASE_URL` | client | no | Backend base URL (empty = same-origin `/api`) |
+| `VITE_VIDKING_ORIGIN` | client | no | Trusted player origin (default `https://www.vidking.net`) |
+| `VITE_ENABLE_PLAYER_DEBUG` | client | no | Show the dev player diagnostics panel |
+| `VITE_FIREBASE_*` | client | no* | Firebase web config (api key, auth domain, project id, app id, …) |
+| `GEMINI_API_KEY` | **server** | no | Gemini key for the AI proxy — never exposed to the client |
+| `GEMINI_CHAT_MODEL` / `GEMINI_EMBED_MODEL` | server | no | Model overrides |
+| `ALLOWED_ORIGINS` | server | no | Comma-separated CORS allow-list |
+| `PORT` | server | no | Express dev port (default `8787`) |
+
+\* Without Firebase config the app still runs; auth/watchlist/progress are disabled.
+
+## Local development
 
 ```bash
-src/
-├── components/         # Reusable UI components
-│   ├── MovieDetails/   # Deep-dive media detail modal with trailer support
-│   ├── ActorProfile/   # Dedicated biography and filmography view
-│   ├── Sidebar/         # Context-aware navigation
-│   └── Player/          # Custom video playback interface
-├── lib/                 # Service integrations and utility logic
-│   ├── firebase.ts     # Firebase initialization and configuration
-│   ├── tmdb.ts         # TMDB API client and endpoint mappings
-│   └── ranking.ts       # Logic for recommendation sorting
-├── store/               # Zustand state stores
-│   ├── useUIStore.ts    # Global UI state (modals, search, selections)
-│   ├── useAuthStore.ts  # Authentication and user profile state
-│   └── useWatchlistStore.ts # Watchlist CRUD and sync logic
-├── types/               # Unified TypeScript type definitions
-└── App.tsx              # Main application entry and layout management
+npm install
+# Frontend + backend together (recommended):
+npm run dev:all      # web on :3000, API on :8787 (proxied at /api)
+# Or run just the frontend:
+npm run dev
 ```
 
-## ⚙️ Environment Configuration
+Open http://localhost:3000.
 
-To run this project locally, you will need to configure the following environment variables in a `.env.local` file:
+## Scripts
 
-```env
-# TMDB Configuration
-VITE_TMDB_API_KEY=your_tmdb_api_key
+| Script | Description |
+| ------ | ----------- |
+| `npm run dev` | Vite dev server |
+| `npm run dev:all` | Frontend + Express backend together |
+| `npm run server:dev` | Backend only (watch mode) |
+| `npm run build` | Production build |
+| `npm run preview` | Preview the production build |
+| `npm run typecheck` | TypeScript checks (client + server) |
+| `npm run lint` | ESLint |
+| `npm run test` | Unit + component tests (Vitest) |
+| `npm run test:e2e` | Playwright e2e (`npx playwright install` first) |
 
-# Firebase Configuration
-VITE_FIREBASE_API_KEY=your_firebase_api_key
-VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-VITE_FIREBASE_APP_ID=your_app_id
+## Deployment (Vercel)
+
+The app deploys as a static SPA plus one serverless function:
+
+1. Import the repo into Vercel.
+2. Set env vars in the Vercel dashboard (`VITE_TMDB_API_KEY`, `VITE_FIREBASE_*`,
+   and server-side `GEMINI_API_KEY`, `ALLOWED_ORIGINS`).
+3. Deploy. [`vercel.json`](vercel.json) routes `/api/*` to
+   [`api/index.ts`](api/index.ts) (the Express app) and serves the SPA for
+   everything else.
+
+## VidKing streaming
+
+The integration and a full troubleshooting guide live in
+[STREAMING_DEBUG.md](STREAMING_DEBUG.md), including verified embed URLs, the
+`postMessage` event shape, resume behavior, and ad-blocker/availability notes.
+
+## Testing
+
+```bash
+npm run typecheck && npm run lint && npm run test && npm run build
 ```
 
-## 🛠 Installation & Usage
+42 unit/component tests cover the VidKing URL builder & event parser, the API
+client, TMDB helpers, format/validation utilities, the toast store, and the
+EmptyState/ErrorState/AIAssistant components. CI runs the same gates on every
+push/PR (see [.github/workflows/ci.yml](.github/workflows/ci.yml)).
 
-1.  **Clone the repository**
-2.  **Install dependencies**:
-    ```bash
-    npm install
-    ```
-3.  **Run Development Server**:
-    ```bash
-    npm run dev
-    ```
-    The application will be accessible at `http://localhost:3000`.
-4.  **Build for Production**:
-    ```bash
-    npm run build
-    ```
-    Outputs optimized static assets to the `dist/` directory.
+## Security
 
-## 🛡 Security Architecture
+- The Gemini key is server-only; the client bundle contains no AI SDK or key.
+- VidKing `postMessage` events are validated by origin **and** shape.
+- Backend inputs are validated with zod; rate limiting and a CORS allow-list
+  protect the AI endpoints; errors return a JSON envelope (no stack traces in prod).
+- AI markdown is rendered without raw HTML; the system prompt resists injection.
+- `.env*` is gitignored; only `.env.example` (placeholders) is committed.
 
-VidKing implements a multi-layer security approach:
-- **Relational Sync**: Data integrity is maintained by cross-referencing user IDs in Firestore rules.
-- **Validation Blueprints**: Strict schema validation for every write operation to prevent malicious payloads.
-- **ID Poisoning Guard**: Protection against URL-based resource enumeration and injection.
-- **Temporal Integrity**: Server-side timestamp validation for all audit-sensitive fields.
+## Limitations
 
----
+- VidKing aggregates third-party sources; specific titles may be unavailable or
+  region-restricted, and ad blockers can interfere with the embed.
+- The AI copilot recommends from model knowledge; it does not assert live
+  streaming availability.
+- Continue Watching fetches title art on demand (no server-side denormalization).
 
-*VidKing - Redefining the Digital Cinema Experience.*
+## Roadmap
+
+- Route-based navigation & deep links (`react-router-dom`).
+- TMDB-grounded AI recommendations (tool calling) and server-side rec caching.
+- Richer search filters (year/rating/genre facets) and a dedicated genre view.
+- Expanded Playwright coverage in CI.
+
+## License
+
+For demonstration/portfolio use.
