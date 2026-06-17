@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
-import { ChevronLeft, ChevronRight, Play, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { PlayIcon, AddIcon } from './icons';
 import { motion } from 'motion/react';
 import { Movie } from '../types';
 import { getImageUrl } from '../lib/tmdb';
@@ -74,6 +75,15 @@ export const MovieRow = ({ title, movies, isLarge, onViewAll }: MovieRowProps) =
               viewport={{ once: true }}
               transition={{ delay: i * 0.05 }}
               onClick={() => handleMovieClick(movie)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleMovieClick(movie);
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label={`Open ${movie.title || movie.name}`}
               className={`flex-none relative group cursor-pointer transition-all duration-500 overflow-hidden rounded-2xl border border-white/5 hover:border-brand/50 hover:shadow-[0_0_30px_rgba(229,9,20,0.25)] ${
                 isLarge ? 'w-48 md:w-56 aspect-[2/3]' : 'w-64 md:w-72 aspect-video'
               }`}
@@ -87,19 +97,22 @@ export const MovieRow = ({ title, movies, isLarge, onViewAll }: MovieRowProps) =
               
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all flex flex-col justify-end p-4">
                 <div className="flex gap-2 mb-3 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                  <div className="p-2 bg-brand rounded-lg text-white shadow-lg shadow-brand/20">
-                    <Play className="w-4 h-4 fill-current" />
+                  <div className="p-2 bg-brand rounded-lg text-white shadow-lg shadow-brand/20" aria-hidden="true">
+                    <PlayIcon className="w-4 h-4" />
                   </div>
-                  <div 
+                  <button
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       if (user) toggleWatchlist(user.uid, movie);
                       else setIsAuthOpen(true);
                     }}
+                    aria-label={isInWatchlist(movie.id.toString()) ? 'Remove from My List' : 'Add to My List'}
+                    aria-pressed={isInWatchlist(movie.id.toString())}
                     className={`p-2 backdrop-blur-md border rounded-lg text-white transition-all ${isInWatchlist(movie.id.toString()) ? 'bg-brand border-brand' : 'bg-white/10 border-white/20 hover:bg-white/20'}`}
                   >
-                    <Plus className={`w-4 h-4 transition-transform ${isInWatchlist(movie.id.toString()) ? 'rotate-45' : ''}`} />
-                  </div>
+                    <AddIcon active={isInWatchlist(movie.id.toString())} className="w-4 h-4" />
+                  </button>
                 </div>
                 <h3 className="text-sm font-bold truncate tracking-tight">{movie.title || movie.name}</h3>
                 <div className="flex items-center justify-between mt-1">
