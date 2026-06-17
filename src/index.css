@@ -18,6 +18,25 @@
     height: 100vh;
     overflow: hidden;
   }
+
+  /* Visible, consistent keyboard focus across all interactive elements. */
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Respect users who prefer reduced motion: neutralize transitions/animations. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
 
 @layer components {
@@ -60,6 +79,29 @@
 
   .hero-mask {
     mask-image: linear-gradient(to bottom, black 0%, black 70%, transparent 100%);
+  }
+
+  /* Skeleton shimmer used by loading placeholders. */
+  .skeleton {
+    @apply relative overflow-hidden bg-white/[0.04] rounded-xl;
+  }
+  .skeleton::after {
+    content: '';
+    @apply absolute inset-0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.06),
+      transparent
+    );
+    animation: skeleton-shimmer 1.6s infinite;
+  }
+
+  @keyframes skeleton-shimmer {
+    100% {
+      transform: translateX(100%);
+    }
   }
 }
 
