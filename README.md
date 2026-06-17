@@ -80,17 +80,34 @@ Copy [`.env.example`](.env.example) to `.env.local` and fill in values.
 
 | Variable | Scope | Required | Purpose |
 | -------- | ----- | -------- | ------- |
-| `VITE_TMDB_API_KEY` | client | yes | TMDB catalog & search |
+| `VITE_TMDB_API_KEY` | client | yes | TMDB catalog & search (v3 key) |
+| `TMDB_READ_ACCESS_TOKEN` | server | no | TMDB v4 token, reserved for an optional backend proxy |
 | `VITE_API_BASE_URL` | client | no | Backend base URL (empty = same-origin `/api`) |
 | `VITE_VIDKING_ORIGIN` | client | no | Trusted player origin (default `https://www.vidking.net`) |
 | `VITE_ENABLE_PLAYER_DEBUG` | client | no | Show the dev player diagnostics panel |
-| `VITE_FIREBASE_*` | client | no* | Firebase web config (api key, auth domain, project id, app id, …) |
+| `VITE_FIREBASE_API_KEY` | client | no* | Firebase **Web API key** — must start with `AIza...` (not the App ID) |
+| `VITE_FIREBASE_AUTH_DOMAIN` / `_PROJECT_ID` / `_APP_ID` | client | no* | Firebase web config |
+| `VITE_FIREBASE_STORAGE_BUCKET` / `_MESSAGING_SENDER_ID` / `_MEASUREMENT_ID` | client | no | Firebase web config (analytics uses measurementId) |
 | `GEMINI_API_KEY` | **server** | no | Gemini key for the AI proxy — never exposed to the client |
 | `GEMINI_CHAT_MODEL` / `GEMINI_EMBED_MODEL` | server | no | Model overrides |
 | `ALLOWED_ORIGINS` | server | no | Comma-separated CORS allow-list |
 | `PORT` | server | no | Express dev port (default `8787`) |
 
-\* Without Firebase config the app still runs; auth/watchlist/progress are disabled.
+\* Without valid Firebase config the app still runs; auth/watchlist/progress are
+disabled and a banner explains what's missing. `VITE_FIREBASE_API_KEY` is
+validated to look like a real key (`AIza...`) — pasting the App ID by mistake is
+detected and degrades gracefully instead of crashing.
+
+### Deploying Firestore security rules
+
+Rules live in [`firestore.rules`](firestore.rules) (default-deny, strictly
+user-scoped). Deploy them with the Firebase CLI:
+
+```bash
+npm i -g firebase-tools
+firebase login
+firebase deploy --only firestore:rules --project <your-project-id>
+```
 
 ## Local development
 
