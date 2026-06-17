@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Play, Plus, ThumbsUp } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Movie } from '../types';
 import { getImageUrl } from '../lib/tmdb';
+import { votePercent } from '../lib/format';
 import { useUIStore } from '../store/useUIStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { usePlayerStore } from '../store/usePlayerStore';
@@ -92,7 +93,8 @@ export const MovieRow = ({ title, movies, isLarge, onViewAll }: MovieRowProps) =
                   <div 
                     onClick={(e) => {
                       e.stopPropagation();
-                      user ? toggleWatchlist(user.uid, movie) : setIsAuthOpen(true);
+                      if (user) toggleWatchlist(user.uid, movie);
+                      else setIsAuthOpen(true);
                     }}
                     className={`p-2 backdrop-blur-md border rounded-lg text-white transition-all ${isInWatchlist(movie.id.toString()) ? 'bg-brand border-brand' : 'bg-white/10 border-white/20 hover:bg-white/20'}`}
                   >
@@ -101,8 +103,7 @@ export const MovieRow = ({ title, movies, isLarge, onViewAll }: MovieRowProps) =
                 </div>
                 <h3 className="text-sm font-bold truncate tracking-tight">{movie.title || movie.name}</h3>
                 <div className="flex items-center justify-between mt-1">
-                   <p className="text-[10px] text-brand font-black uppercase tracking-widest">{Math.round(movie.vote_average * 10)}% AI Match</p>
-                   {Math.random() > 0.7 && <div className="h-1 w-12 bg-white/20 rounded-full overflow-hidden"><div className="h-full bg-brand w-2/3" /></div>}
+                   <p className="text-[10px] text-brand font-black uppercase tracking-widest">{votePercent(movie.vote_average)}% Match</p>
                 </div>
               </div>
             </motion.div>

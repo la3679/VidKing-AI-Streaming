@@ -1,12 +1,39 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
-import firebaseConfig from '../../firebase-applet-config.json';
+import appletConfig from '../../firebase-applet-config.json';
+import { env } from './env';
+import { logger } from './logger';
+
+/**
+ * Firebase config is resolved from `VITE_FIREBASE_*` env vars when present,
+ * falling back to the committed AI Studio applet config. We initialize the SDK
+ * unconditionally (initializeApp does not perform network I/O), so a missing or
+ * partial config never crashes the app at import time — auth/Firestore calls
+ * simply fail at runtime and are reported through normalized error handling.
+ */
+const firebaseConfig = {
+  apiKey: env.firebase.apiKey || appletConfig.apiKey,
+  authDomain: env.firebase.authDomain || appletConfig.authDomain,
+  projectId: env.firebase.projectId || appletConfig.projectId,
+  appId: env.firebase.appId || appletConfig.appId,
+  storageBucket: env.firebase.storageBucket || appletConfig.storageBucket,
+  messagingSenderId: env.firebase.messagingSenderId || appletConfig.messagingSenderId,
+};
+
+const firestoreDatabaseId =
+  env.firebase.firestoreDatabaseId || appletConfig.firestoreDatabaseId || undefined;
+
+/** Whether Firebase has enough config to actually authenticate / read Firestore. */
+export const firebaseEnabled = Boolean(firebaseConfig.apiKey && firebaseConfig.projectId);
+
+if (!firebaseEnabled) {
+  logger.warn('Firebase config incomplete — auth and watchlist/progress are disabled.');
+}
 
 const app = initializeApp(firebaseConfig);
-// CRITICAL: The app will break without this line
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
-export const auth = getAuth();
+export const db = firestoreDatabaseId ? getFirestore(app, firestoreDatabaseId) : getFirestore(app);
+export const auth = getAuth(app);
 
 export enum OperationType {
   CREATE = 'create',
@@ -51,6 +78,6 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
     operationType,
     path
   };
-  console.error('Firestore Error: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
+  logger.error('Firestore error:', errInfo);
+  throw new Error(errInfo.error);
 }
