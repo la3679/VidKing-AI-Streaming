@@ -24,7 +24,8 @@ import { EmptyState } from './components/states/EmptyState';
 import { ErrorState } from './components/states/ErrorState';
 import { HeroSkeleton, RowSkeleton, GridSkeleton } from './components/states/Skeleton';
 import { Movie } from './types';
-import { getTrending, getDiscover, searchMulti } from './lib/tmdb';
+import { getTrending, getDiscover, getTopRated, getPopularTv, discoverByGenre, searchMulti, GENRES } from './lib/tmdb';
+import axios from 'axios';
 import { logger } from './lib/logger';
 import { AnimatePresence } from 'motion/react';
 import { useUIStore } from './store/useUIStore';
@@ -39,6 +40,10 @@ export default function App() {
   const [action, setAction] = useState<Movie[]>([]);
   const [comedy, setComedy] = useState<Movie[]>([]);
   const [horror, setHorror] = useState<Movie[]>([]);
+  const [topRated, setTopRated] = useState<Movie[]>([]);
+  const [scifi, setScifi] = useState<Movie[]>([]);
+  const [drama, setDrama] = useState<Movie[]>([]);
+  const [tvShows, setTvShows] = useState<Movie[]>([]);
   const [isPlaying, setIsPlaying] = useState<Movie | null>(null);
   const [searchResults, setSearchResults] = useState<Movie[]>([]);
   const [homeLoading, setHomeLoading] = useState(true);
@@ -55,18 +60,23 @@ export default function App() {
     }
     setSearchLoading(true);
     setSearchError(false);
+    const controller = new AbortController();
     const timer = setTimeout(async () => {
       try {
-        const results = await searchMulti(searchQuery);
+        const results = await searchMulti(searchQuery, controller.signal);
         setSearchResults(results.filter((m: any) => m.backdrop_path || m.poster_path));
+        setSearchLoading(false);
       } catch (err) {
+        if (axios.isCancel(err)) return; // superseded by a newer query
         logger.error('Search failed:', err);
         setSearchError(true);
-      } finally {
         setSearchLoading(false);
       }
-    }, 500);
-    return () => clearTimeout(timer);
+    }, 400);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
   }, [searchQuery]);
 
   useEffect(() => {
@@ -88,18 +98,27 @@ export default function App() {
     setHomeLoading(true);
     setHomeError(false);
     try {
-      const [trendData, origData, actData, comData, horData] = await Promise.all([
-        getTrending(),
-        getDiscover({ with_networks: 213 }), // Netflix originals catalogue
-        getDiscover({ with_genres: 28 }),    // Action
-        getDiscover({ with_genres: 35 }),    // Comedy
-        getDiscover({ with_genres: 27 }),    // Horror
-      ]);
+      const [trendData, origData, actData, comData, horData, topData, sciData, dramaData, tvData] =
+        await Promise.all([
+          getTrending(),
+          getDiscover({ with_networks: 213 }), // Netflix originals catalogue
+          discoverByGenre(GENRES.ACTION),
+          discoverByGenre(GENRES.COMEDY),
+          discoverByGenre(GENRES.HORROR),
+          getTopRated('movie'),
+          discoverByGenre(GENRES.SCIFI),
+          discoverByGenre(GENRES.DRAMA),
+          getPopularTv(),
+        ]);
       setTrending(trendData);
       setOriginals(origData);
       setAction(actData);
       setComedy(comData);
       setHorror(horData);
+      setTopRated(topData);
+      setScifi(sciData);
+      setDrama(dramaData);
+      setTvShows(tvData);
     } catch (err) {
       logger.error('Failed to fetch TMDB data:', err);
       setHomeError(true);
@@ -280,10 +299,14 @@ export default function App() {
                       {originals.length > 0 && (
                         <MovieRow title="VidKing Originals" movies={originals} isLarge onViewAll={() => setSearchQuery('Netflix Originals')} />
                       )}
-                      <MovieRow title="High Octane Thrillers" movies={action} onViewAll={() => setSearchQuery('Action Movies')} />
-                      <MovieRow title="Tonight's Top Comedies" movies={comedy} onViewAll={() => setSearchQuery('Comedy')} />
-                      <MovieRow title="Atmospheric Horrors" movies={horror} onViewAll={() => setSearchQuery('Horror')} />
                       <MovieRow title="Trending Now" movies={trending.slice(1)} onViewAll={() => setSearchQuery('Trending')} />
+                      <MovieRow title="Top Rated" movies={topRated} isLarge onViewAll={() => setSearchQuery('Top Rated')} />
+                      <MovieRow title="High Octane Action" movies={action} onViewAll={() => setSearchQuery('Action Movies')} />
+                      <MovieRow title="Tonight's Top Comedies" movies={comedy} onViewAll={() => setSearchQuery('Comedy')} />
+                      <MovieRow title="Sci-Fi & Beyond" movies={scifi} onViewAll={() => setSearchQuery('Science Fiction')} />
+                      <MovieRow title="Atmospheric Horror" movies={horror} onViewAll={() => setSearchQuery('Horror')} />
+                      <MovieRow title="Acclaimed Drama" movies={drama} onViewAll={() => setSearchQuery('Drama')} />
+                      <MovieRow title="Binge-Worthy TV Shows" movies={tvShows} onViewAll={() => setSearchQuery('TV Shows')} />
                     </div>
                   </>
                 )}
