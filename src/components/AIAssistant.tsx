@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Send, Sparkles, X, BrainCircuit, Mic, MessageSquare } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Send, Sparkles, X, BrainCircuit } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useUIStore } from '../store/useUIStore';
 import { ai, MODELS } from '../lib/gemini';
@@ -56,7 +56,9 @@ export const AIAssistant = () => {
           initial={{ opacity: 0, x: 100, scale: 0.9 }}
           animate={{ opacity: 1, x: 0, scale: 1 }}
           exit={{ opacity: 0, x: 100, scale: 0.9 }}
-          className="fixed bottom-6 right-6 w-[400px] h-[600px] z-[100] flex flex-col shadow-2xl overflow-hidden"
+          role="dialog"
+          aria-label="VidKing AI assistant"
+          className="fixed z-[100] flex flex-col shadow-2xl overflow-hidden inset-x-3 bottom-3 h-[70vh] sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-[400px] sm:h-[600px]"
         >
           <div className="glass-card flex-1 flex flex-col h-full bg-black/60 border border-brand/20">
             {/* Header */}
@@ -72,11 +74,12 @@ export const AIAssistant = () => {
                   </p>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={toggleAssistant}
+                aria-label="Close assistant"
                 className="p-2 hover:bg-white/10 rounded-xl transition-colors border border-white/5"
               >
-                <X className="w-5 h-5 opacity-60" />
+                <X className="w-5 h-5 opacity-60" aria-hidden="true" />
               </button>
             </div>
 
@@ -146,24 +149,24 @@ export const AIAssistant = () => {
             {/* Input */}
             <div className="p-4 border-t border-white/10 bg-black/40">
               <div className="relative">
-                <input 
+                <label htmlFor="assistant-input" className="sr-only">Ask VidKing AI</label>
+                <input
+                  id="assistant-input"
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                   placeholder="Ask VidKing AI..."
-                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-4 pr-24 text-sm focus:outline-none focus:ring-1 focus:ring-brand"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-4 pr-14 text-sm focus:outline-none focus:ring-1 focus:ring-brand"
                 />
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                  <button className="p-2 text-gray-400 hover:text-white transition-colors">
-                    <Mic className="w-4 h-4" />
-                  </button>
-                  <button 
+                  <button
                     onClick={handleSend}
                     disabled={!input.trim() || isTyping}
+                    aria-label="Send message"
                     className="p-2 bg-brand text-white rounded-lg hover:bg-brand-hover transition-colors disabled:opacity-50"
                   >
-                    <Send className="w-4 h-4" />
+                    <Send className="w-4 h-4" aria-hidden="true" />
                   </button>
                 </div>
               </div>

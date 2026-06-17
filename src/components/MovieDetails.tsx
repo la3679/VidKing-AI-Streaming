@@ -1,12 +1,16 @@
-import React, { useEffect, useState } from 'react';
-import { X, Play, Plus, ThumbsUp, Star, Calendar, Clock, Sparkles, Volume2, VolumeX } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { useEffect, useState } from 'react';
+import { X, Play, Plus, ThumbsUp, Volume2, VolumeX } from 'lucide-react';
+import { motion } from 'motion/react';
 import { Movie } from '../types';
 import { getImageUrl, getMovieDetails, getTvDetails } from '../lib/tmdb';
 import { useAuthStore } from '../store/useAuthStore';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useUIStore } from '../store/useUIStore';
 import { useWatchlistStore } from '../store/useWatchlistStore';
+import { useEscapeKey } from '../hooks/useEscapeKey';
+import { formatRuntime, formatYear, votePercent } from '../lib/format';
+import { logger } from '../lib/logger';
+import { Skeleton } from './states/Skeleton';
 
 interface MovieDetailsProps {
   media: Movie;
@@ -40,7 +44,7 @@ export const MovieDetails = ({ media, onClose, onPlay }: MovieDetailsProps) => {
           });
         }
       } catch (err) {
-        console.error(err);
+        logger.error('Failed to load title details:', err);
       } finally {
         setLoading(false);
       }
@@ -52,7 +56,11 @@ export const MovieDetails = ({ media, onClose, onPlay }: MovieDetailsProps) => {
     return () => clearTimeout(timer);
   }, [media, user, trackInteraction]);
 
+  useEscapeKey(onClose);
+
   const trailer = details?.videos?.results?.find((v: any) => v.type === 'Trailer' && v.site === 'YouTube');
+  const year = formatYear(media.release_date || media.first_air_date);
+  const runtime = formatRuntime(details?.runtime || details?.episode_run_time?.[0]);
 
   return (
     <motion.div 
@@ -68,9 +76,13 @@ export const MovieDetails = ({ media, onClose, onPlay }: MovieDetailsProps) => {
         exit={{ scale: 0.9, y: 50 }}
         className="bg-[#181818] w-full max-w-5xl h-fit max-h-[90vh] overflow-y-auto rounded-xl shadow-2xl relative scrollbar-hide"
         onClick={e => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Details for ${media.title || media.name}`}
       >
-        <button 
+        <button
           onClick={onClose}
+          aria-label="Close details"
           className="absolute top-4 right-4 z-20 p-2 bg-black/60 hover:bg-black/80 rounded-full text-white transition-colors"
         >
           <X className="w-6 h-6" />
@@ -138,10 +150,14 @@ export const MovieDetails = ({ media, onClose, onPlay }: MovieDetailsProps) => {
         <div className="p-8 grid grid-cols-1 md:grid-cols-3 gap-12">
           <div className="md:col-span-2 space-y-6">
             <div className="flex flex-wrap items-center gap-3 text-sm font-medium">
-              <span className="text-green-400 font-bold">{Math.round(media.vote_average * 10)}% Match</span>
-              <span className="text-gray-400">{(media.release_date || media.first_air_date || '').split('-')[0]}</span>
-              {details?.runtime && <span className="text-gray-400">{details.runtime}m</span>}
-              <span className="border border-gray-500 rounded px-1.5 py-0 text-[10px] uppercase font-black text-gray-400">4K Ultra HD</span>
+              {media.vote_average > 0 && (
+                <span className="text-green-400 font-bold">{votePercent(media.vote_average)}% Match</span>
+              )}
+              {year && <span className="text-gray-400">{year}</span>}
+              {runtime && <span className="text-gray-400">{runtime}</span>}
+              <span className="border border-gray-500 rounded px-1.5 py-0 text-[10px] uppercase font-black text-gray-400">
+                {media.media_type === 'tv' ? 'Series' : 'Film'}
+              </span>
             </div>
 
             <p className="text-lg leading-relaxed text-gray-200">
@@ -173,6 +189,12 @@ export const MovieDetails = ({ media, onClose, onPlay }: MovieDetailsProps) => {
           <div className="space-y-8">
             <div>
               <p className="text-gray-500 text-xs uppercase font-black tracking-widest mb-2">Cast</p>
+              {loading && !details ? (
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-4/5" />
+                </div>
+              ) : (
               <div className="flex flex-wrap gap-x-2 gap-y-1 text-sm">
                 {details?.credits?.cast?.slice(0, 10).map((c: any) => (
                   <span 
@@ -188,6 +210,7 @@ export const MovieDetails = ({ media, onClose, onPlay }: MovieDetailsProps) => {
                 ))}
                 {details?.credits?.cast?.length > 10 && <span className="text-gray-400 italic">more</span>}
               </div>
+              )}
             </div>
 
             {details?.recommendations?.results && (
