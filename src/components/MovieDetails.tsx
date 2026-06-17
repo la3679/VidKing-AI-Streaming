@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { X, Play, Plus, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import { PlayIcon, AddIcon, CloseIcon } from './icons';
 import { motion } from 'motion/react';
 import { Movie } from '../types';
 import { getImageUrl, getMovieDetails, getTvDetails } from '../lib/tmdb';
@@ -24,7 +25,7 @@ interface MovieDetailsProps {
 export const MovieDetails = ({ media, onClose, onPlay }: MovieDetailsProps) => {
   const { user, isLiked, toggleLike } = useAuthStore();
   const { trackInteraction } = usePlayerStore();
-  const { setSelectedActorId, setIsAuthOpen } = useUIStore();
+  const { setSelectedActorId, setIsAuthOpen, setSelectedMedia } = useUIStore();
   const { toggleWatchlist, isInWatchlist } = useWatchlistStore();
   const [details, setDetails] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -117,7 +118,7 @@ export const MovieDetails = ({ media, onClose, onPlay }: MovieDetailsProps) => {
           aria-label="Close details"
           className="absolute top-4 right-4 z-20 p-2 bg-black/60 hover:bg-black/80 rounded-full text-white transition-colors"
         >
-          <X className="w-6 h-6" />
+          <CloseIcon className="w-6 h-6" />
         </button>
 
         {/* Hero Section */}
@@ -163,7 +164,7 @@ export const MovieDetails = ({ media, onClose, onPlay }: MovieDetailsProps) => {
                 onClick={() => onPlay(media)}
                 className="btn-primary"
               >
-                <Play className="w-6 h-6 fill-current" /> Play
+                <PlayIcon className="w-6 h-6" /> Play
               </button>
               <button
                 onClick={() => (user ? toggleWatchlist(user.uid, media) : setIsAuthOpen(true))}
@@ -171,7 +172,7 @@ export const MovieDetails = ({ media, onClose, onPlay }: MovieDetailsProps) => {
                 aria-pressed={isInWatchlist(media.id.toString())}
                 className={`p-2.5 border rounded-full transition-all active:scale-95 ${isInWatchlist(media.id.toString()) ? 'bg-brand border-brand text-white' : 'bg-black/40 border-white/20 hover:bg-white/10 hover:border-white/40'}`}
               >
-                <Plus className={`w-6 h-6 transition-transform ${isInWatchlist(media.id.toString()) ? 'rotate-45' : ''}`} />
+                <AddIcon active={isInWatchlist(media.id.toString())} className="w-6 h-6" />
               </button>
               <button
                 onClick={handleLike}
@@ -262,17 +263,23 @@ export const MovieDetails = ({ media, onClose, onPlay }: MovieDetailsProps) => {
                 <p className="text-gray-500 text-xs uppercase font-black tracking-widest mb-4">Recommended for you</p>
                 <div className="grid grid-cols-2 gap-2">
                   {details.recommendations.results.slice(0, 4).map((rec: any) => (
-                    <div key={rec.id} className="aspect-video relative rounded overflow-hidden group cursor-pointer">
-                      <img 
-                        src={getImageUrl(rec.backdrop_path, 'w342')} 
-                        className="w-full h-full object-cover" 
-                        alt="" 
+                    <button
+                      type="button"
+                      key={rec.id}
+                      onClick={() => setSelectedMedia(rec)}
+                      aria-label={`Open ${rec.title || rec.name}`}
+                      className="aspect-video relative rounded overflow-hidden group cursor-pointer"
+                    >
+                      <img
+                        src={getImageUrl(rec.backdrop_path, 'w342')}
+                        className="w-full h-full object-cover"
+                        alt=""
                         referrerPolicy="no-referrer"
                       />
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <Play className="w-6 h-6 fill-current text-white" />
+                        <PlayIcon className="w-6 h-6 text-white" />
                       </div>
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>

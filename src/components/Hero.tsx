@@ -1,4 +1,4 @@
-import { Play, Plus } from 'lucide-react';
+import { PlayIcon, AddIcon } from './icons';
 import { motion } from 'motion/react';
 import { Movie } from '../types';
 import { getImageUrl } from '../lib/tmdb';
@@ -66,14 +66,14 @@ export const Hero = ({ movie }: HeroProps) => {
               onClick={handlePlay}
               className="flex items-center gap-3 px-10 py-4 bg-white text-black rounded-lg font-black uppercase text-xs tracking-[0.2em] hover:bg-brand hover:text-white transition-all shadow-2xl group/btn"
             >
-              <Play className="w-5 h-5 fill-current group-hover/btn:scale-110 transition-transform" />
+              <PlayIcon className="w-5 h-5 group-hover/btn:scale-110 transition-transform" />
               Watch Now
             </button>
             <button 
               onClick={() => user ? toggleWatchlist(user.uid, movie) : setIsAuthOpen(true)}
               className={`flex items-center gap-3 px-8 py-4 rounded-lg font-black uppercase text-xs tracking-[0.2em] backdrop-blur-md border transition-all font-sans ${isInWatchlist(movie.id.toString()) ? 'bg-brand border-brand text-white' : 'bg-white/5 text-white hover:bg-white/10 border-white/10'}`}
             >
-              <Plus className={`w-5 h-5 transition-transform ${isInWatchlist(movie.id.toString()) ? 'rotate-45' : ''}`} />
+              <AddIcon active={isInWatchlist(movie.id.toString())} className="w-5 h-5" />
               {isInWatchlist(movie.id.toString()) ? 'In Your List' : 'Add to List'}
             </button>
           </div>

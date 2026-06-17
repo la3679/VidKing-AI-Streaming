@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Search, Sparkles, LogOut } from 'lucide-react';
+import { Sparkles, LogOut } from 'lucide-react';
+import { SearchIcon } from './icons';
 import { useAuthStore } from '../store/useAuthStore';
 import { useUIStore } from '../store/useUIStore';
 import { usePlayerStore } from '../store/usePlayerStore';
@@ -40,7 +41,7 @@ export const TopHeader = () => {
             onChange={(e) => handleSearchChange(e.target.value)}
             className="bg-white/5 border border-white/10 rounded-full py-2.5 px-12 w-[220px] sm:w-[320px] lg:w-[540px] text-sm focus:outline-none focus:border-brand/50 focus:bg-white/10 transition-all placeholder:text-white/20 font-medium"
           />
-          <Search className="w-4 h-4 absolute left-4 top-3.5 text-white/30 group-focus-within:text-brand transition-colors pointer-events-none" aria-hidden="true" />
+          <SearchIcon className="w-4 h-4 absolute left-4 top-3.5 text-white/30 group-focus-within:text-brand transition-colors pointer-events-none" />
         </div>
       </div>
 
