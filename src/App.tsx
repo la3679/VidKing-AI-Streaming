@@ -330,10 +330,12 @@ export default function App() {
             <footer className="pt-24 pb-12 border-t border-white/5">
               <div className="flex flex-col md:flex-row justify-between items-center gap-6 text-[9px] font-black uppercase tracking-[0.4em] opacity-40">
                 <span className="text-brand">VIDKING STREAMING</span>
+                {/* Informational labels — not yet linked, so rendered as
+                    non-interactive text rather than dead links. */}
                 <div className="flex gap-12">
-                  <a href="#" className="hover:text-white transition-colors">Privacy</a>
-                  <a href="#" className="hover:text-white transition-colors">Terms</a>
-                  <a href="#" className="hover:text-white transition-colors">Help</a>
+                  <span>Privacy</span>
+                  <span>Terms</span>
+                  <span>Help</span>
                 </div>
               </div>
               {/* TMDB requires attribution for use of their API. */}

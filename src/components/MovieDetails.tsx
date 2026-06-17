@@ -242,8 +242,10 @@ export const MovieDetails = ({ media, onClose, onPlay }: MovieDetailsProps) => {
               ) : (
               <div className="flex flex-wrap gap-x-2 gap-y-1 text-sm">
                 {details?.credits?.cast?.slice(0, 10).map((c: any) => (
-                  <span 
-                    key={c.id} 
+                  <button
+                    type="button"
+                    key={c.id}
+                    aria-label={`View ${c.name}`}
                     className="text-gray-300 hover:text-brand hover:underline cursor-pointer transition-colors"
                     onClick={() => {
                       setSelectedActorId(c.id.toString());
@@ -251,7 +253,7 @@ export const MovieDetails = ({ media, onClose, onPlay }: MovieDetailsProps) => {
                     }}
                   >
                     {c.name},
-                  </span>
+                  </button>
                 ))}
                 {details?.credits?.cast?.length > 10 && <span className="text-gray-400 italic">more</span>}
               </div>
