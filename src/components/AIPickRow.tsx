@@ -1,50 +1,42 @@
-import React, { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Sparkles, BrainCircuit, RefreshCcw } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuthStore } from '../store/useAuthStore';
 import { RankingService } from '../lib/ranking';
 import { getTrending } from '../lib/tmdb';
 import { useUIStore } from '../store/useUIStore';
+import { votePercent } from '../lib/format';
+import { logger } from '../lib/logger';
+import { Movie } from '../types';
 
 export const AIPickRow = () => {
   const { user } = useAuthStore();
   const { setSelectedMedia } = useUIStore();
-  const [picks, setPicks] = useState<any[]>([]);
+  const [picks, setPicks] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(false);
-  const [isAdapting, setIsAdapting] = useState(false);
+
+  const loadPicks = useCallback(async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const rankingService = RankingService.getInstance();
+      const signals = await rankingService.getUserSignals(user.uid);
+      const candidates = await getTrending();
+      const ranked = await rankingService.rankCandidates(candidates, signals);
+      const filtered = ranked
+        .filter((m) => !signals.history.some((h) => h.tmdbId === m.id.toString()))
+        .slice(0, 4);
+      setPicks(filtered);
+    } catch (err) {
+      logger.warn('Could not build AI picks:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
 
   useEffect(() => {
-    const fetchRealTimePicks = async () => {
-      if (!user) return;
-      setLoading(true);
-      
-      try {
-        const rankingService = RankingService.getInstance();
-        
-        // 1. Get raw signals from Firestore
-        const signals = await rankingService.getUserSignals(user.uid);
-        
-        // 2. Fetch candidates (Trending + Discover)
-        const candidates = await getTrending(); // We could fetch more for a broader pool
-        
-        // 3. Rank them using hybrid scores (embeddings + collaborative + context)
-        const ranked = await rankingService.rankCandidates(candidates, signals);
-        
-        // 4. Take top 4 unique items not in history
-        const filtered = ranked
-          .filter(m => !signals.history.some(h => h.tmdbId === m.id.toString()))
-          .slice(0, 4);
-          
-        setPicks(filtered);
-      } catch (err) {
-        console.error("AI Ranking Failure:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchRealTimePicks();
-  }, [user]);
+    loadPicks();
+  }, [loadPicks]);
 
   if (!user || (picks.length === 0 && !loading)) return null;
 
@@ -63,12 +55,14 @@ export const AIPickRow = () => {
             </div>
           </div>
         </div>
-        <button 
-          onClick={() => setIsAdapting(!isAdapting)}
-          className="text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-white transition-colors flex items-center gap-2"
+        <button
+          onClick={loadPicks}
+          disabled={loading}
+          aria-label="Refresh recommendations"
+          className="text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-white transition-colors flex items-center gap-2 disabled:opacity-50"
         >
-          <RefreshCcw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
-          Force Neural Re-sync
+          <RefreshCcw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
+          Refresh picks
         </button>
       </div>
 
@@ -98,7 +92,7 @@ export const AIPickRow = () => {
                   <div className="flex items-center justify-between mb-6">
                     <Sparkles className="w-5 h-5 text-brand opacity-40 group-hover:opacity-100 transition-opacity" />
                     <div className="text-[9px] font-black bg-brand/20 text-brand px-2 py-0.5 rounded-full uppercase tracking-tighter">
-                      {Math.round((pick.aiScore || 0) * 100)}% Match
+                      {votePercent(pick.vote_average)}% Match
                     </div>
                   </div>
                   <h3 className="text-lg font-bold mb-2 tracking-tight group-hover:text-brand transition-colors line-clamp-1">{pick.title || pick.name}</h3>
@@ -109,8 +103,8 @@ export const AIPickRow = () => {
                 
                 <div className="mt-6 flex items-center justify-between border-t border-white/5 pt-4">
                   <div className="flex flex-col">
-                    <span className="text-[9px] text-white/30 uppercase font-black tracking-widest mb-1">Inference Loop</span>
-                    <span className="text-[10px] font-bold text-gray-500">CONTENT-EMBEDDING-V2</span>
+                    <span className="text-[9px] text-white/30 uppercase font-black tracking-widest mb-1">Why this pick</span>
+                    <span className="text-[10px] font-bold text-gray-500">AI ranked for you</span>
                   </div>
                   <button 
                     onClick={(e) => {
