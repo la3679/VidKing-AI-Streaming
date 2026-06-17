@@ -23,6 +23,9 @@ export default tseslint.config(
       // Discouraged but legitimate in a few effects here (e.g. clearing derived
       // state). Surface as guidance, not a build blocker.
       'react-hooks/set-state-in-effect': 'warn',
+      // React Compiler optimization hints — useful guidance, not correctness
+      // errors. Keep as warnings so they don't block the build.
+      'react-hooks/preserve-manual-memoization': 'warn',
       // The codebase predates strict typing in places; surface as warnings so
       // `lint` stays green while still guiding cleanup. `typecheck` is the hard gate.
       '@typescript-eslint/no-explicit-any': 'off',
