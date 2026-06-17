@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useEffect, useState } from 'react';
-import { Sparkles, BrainCircuit, Search, Play, Bookmark } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { Search, Play, Bookmark } from 'lucide-react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './lib/firebase';
 import { useAuthStore } from './store/useAuthStore';
@@ -18,8 +18,12 @@ import { MovieDetails } from './components/MovieDetails';
 import { AuthModal } from './components/AuthModal';
 import { ActorProfile } from './components/ActorProfile';
 import { Player } from './components/Player';
+import { EmptyState } from './components/states/EmptyState';
+import { ErrorState } from './components/states/ErrorState';
+import { HeroSkeleton, RowSkeleton, GridSkeleton } from './components/states/Skeleton';
 import { Movie } from './types';
 import { getTrending, getDiscover, searchMulti } from './lib/tmdb';
+import { logger } from './lib/logger';
 import { AnimatePresence } from 'motion/react';
 import { useUIStore } from './store/useUIStore';
 import { useWatchlistStore } from './store/useWatchlistStore';
@@ -35,15 +39,30 @@ export default function App() {
   const [horror, setHorror] = useState<Movie[]>([]);
   const [isPlaying, setIsPlaying] = useState<Movie | null>(null);
   const [searchResults, setSearchResults] = useState<Movie[]>([]);
+  const [homeLoading, setHomeLoading] = useState(true);
+  const [homeError, setHomeError] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState(false);
 
   useEffect(() => {
     if (!searchQuery) {
       setSearchResults([]);
+      setSearchError(false);
+      setSearchLoading(false);
       return;
     }
+    setSearchLoading(true);
+    setSearchError(false);
     const timer = setTimeout(async () => {
-      const results = await searchMulti(searchQuery);
-      setSearchResults(results.filter((m: any) => m.backdrop_path || m.poster_path));
+      try {
+        const results = await searchMulti(searchQuery);
+        setSearchResults(results.filter((m: any) => m.backdrop_path || m.poster_path));
+      } catch (err) {
+        logger.error('Search failed:', err);
+        setSearchError(true);
+      } finally {
+        setSearchLoading(false);
+      }
     }, 500);
     return () => clearTimeout(timer);
   }, [searchQuery]);
@@ -61,27 +80,33 @@ export default function App() {
     }
   }, [user, subscribeToWatchlist]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [trendData, origData, actData, comData, horData] = await Promise.all([
-          getTrending(),
-          getDiscover({ with_networks: 213 }), // Netflix (as placeholder for originals)
-          getDiscover({ with_genres: 28 }),    // Action
-          getDiscover({ with_genres: 35 }),    // Comedy
-          getDiscover({ with_genres: 27 }),    // Horror
-        ]);
-        setTrending(trendData);
-        setOriginals(origData);
-        setAction(actData);
-        setComedy(comData);
-        setHorror(horData);
-      } catch (err) {
-        console.error("Failed to fetch TMDB data:", err);
-      }
-    };
-    fetchData();
+  const loadHome = useCallback(async () => {
+    setHomeLoading(true);
+    setHomeError(false);
+    try {
+      const [trendData, origData, actData, comData, horData] = await Promise.all([
+        getTrending(),
+        getDiscover({ with_networks: 213 }), // Netflix originals catalogue
+        getDiscover({ with_genres: 28 }),    // Action
+        getDiscover({ with_genres: 35 }),    // Comedy
+        getDiscover({ with_genres: 27 }),    // Horror
+      ]);
+      setTrending(trendData);
+      setOriginals(origData);
+      setAction(actData);
+      setComedy(comData);
+      setHorror(horData);
+    } catch (err) {
+      logger.error('Failed to fetch TMDB data:', err);
+      setHomeError(true);
+    } finally {
+      setHomeLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadHome();
+  }, [loadHome]);
 
   const handlePlay = (movie: Movie) => {
     if (!user) {
@@ -119,7 +144,7 @@ export default function App() {
                 </div>
                 
                 {watchlistArr.length > 0 ? (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6" aria-label="Saved titles">
                     {watchlistArr.map((movie: any) => (
                       <div 
                         key={movie.tmdbId} 
@@ -152,19 +177,13 @@ export default function App() {
                     ))}
                   </div>
                 ) : (
-                  <div className="h-[50vh] flex flex-col items-center justify-center text-center">
-                    <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6">
-                       <Bookmark className="w-8 h-8 text-white/20" />
-                    </div>
-                    <h3 className="text-2xl font-black uppercase mb-4 tracking-tighter">Your list is empty</h3>
-                    <p className="text-white/40 text-sm max-w-xs mx-auto leading-relaxed uppercase tracking-widest font-black">Add movies and shows to keep track of what you want to watch next.</p>
-                    <button 
-                      onClick={() => setIsWatchlistOpen(false)}
-                      className="btn-primary mt-12 px-12"
-                    >
-                      Start Exploring
-                    </button>
-                  </div>
+                  <EmptyState
+                    icon={Bookmark}
+                    title="Your list is empty"
+                    description="Add movies and shows to keep track of what you want to watch next."
+                    action={{ label: 'Start Exploring', onClick: () => setIsWatchlistOpen(false) }}
+                    className="h-[50vh]"
+                  />
                 )}
               </div>
             ) : searchQuery ? (
@@ -181,7 +200,16 @@ export default function App() {
                     Clear Search
                   </button>
                 </div>
-                {searchResults.length > 0 ? (
+                {searchLoading ? (
+                  <GridSkeleton count={12} />
+                ) : searchError ? (
+                  <ErrorState
+                    title="Search failed"
+                    message="We couldn't complete that search. Check your connection and try again."
+                    onRetry={() => setSearchQuery(searchQuery)}
+                    className="h-[40vh]"
+                  />
+                ) : searchResults.length > 0 ? (
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6">
                     {searchResults.map((movie) => (
                       <div key={movie.id} className="group cursor-pointer" onClick={() => setSelectedMedia(movie)}>
@@ -205,11 +233,12 @@ export default function App() {
                     ))}
                   </div>
                 ) : (
-                  <div className="h-[40vh] flex flex-col items-center justify-center text-center">
-                    <Search className="w-12 h-12 text-white/10 mb-4" />
-                    <h3 className="text-xl font-bold mb-2">No results found</h3>
-                    <p className="text-white/40 text-sm">Try searching for something else or explore trending titles.</p>
-                  </div>
+                  <EmptyState
+                    icon={Search}
+                    title="No results found"
+                    description="Try searching for something else or explore trending titles."
+                    className="h-[40vh]"
+                  />
                 )}
               </div>
             ) : (
@@ -217,23 +246,40 @@ export default function App() {
                 {/* Immersive Hero Section */}
                 <div className="pt-6">
                   <div className="h-[75vh] relative rounded-3xl overflow-hidden shadow-2xl">
-                    <Hero movie={trending[0]} />
+                    {homeLoading ? <HeroSkeleton /> : <Hero movie={trending[0]} />}
                   </div>
                 </div>
 
-                {/* AI Custom Picks */}
-                <AIPickRow />
-                
-                {/* Standard Rows */}
-                <div className="space-y-16">
-                  {originals.length > 0 && (
-                    <MovieRow title="VidKing Originals" movies={originals} isLarge onViewAll={() => setSearchQuery('Netflix Originals')} />
-                  )}
-                  <MovieRow title="High Octane Thrillers" movies={action} onViewAll={() => setSearchQuery('Action Movies')} />
-                  <MovieRow title="Tonight's Top Comedies" movies={comedy} onViewAll={() => setSearchQuery('Comedy')} />
-                  <MovieRow title="Atmospheric Horrors" movies={horror} onViewAll={() => setSearchQuery('Horror')} />
-                  <MovieRow title="Trending Now" movies={trending.slice(1)} onViewAll={() => setSearchQuery('Trending')} />
-                </div>
+                {homeError ? (
+                  <ErrorState
+                    title="Couldn't load content"
+                    message="We couldn't reach the catalog. Check your connection or TMDB configuration and try again."
+                    onRetry={loadHome}
+                    className="min-h-[40vh]"
+                  />
+                ) : homeLoading ? (
+                  <div className="space-y-16">
+                    <RowSkeleton large />
+                    <RowSkeleton />
+                    <RowSkeleton />
+                  </div>
+                ) : (
+                  <>
+                    {/* AI Custom Picks */}
+                    <AIPickRow />
+
+                    {/* Standard Rows */}
+                    <div className="space-y-16">
+                      {originals.length > 0 && (
+                        <MovieRow title="VidKing Originals" movies={originals} isLarge onViewAll={() => setSearchQuery('Netflix Originals')} />
+                      )}
+                      <MovieRow title="High Octane Thrillers" movies={action} onViewAll={() => setSearchQuery('Action Movies')} />
+                      <MovieRow title="Tonight's Top Comedies" movies={comedy} onViewAll={() => setSearchQuery('Comedy')} />
+                      <MovieRow title="Atmospheric Horrors" movies={horror} onViewAll={() => setSearchQuery('Horror')} />
+                      <MovieRow title="Trending Now" movies={trending.slice(1)} onViewAll={() => setSearchQuery('Trending')} />
+                    </div>
+                  </>
+                )}
               </>
             )}
 

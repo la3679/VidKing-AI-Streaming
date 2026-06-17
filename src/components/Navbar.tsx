@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { Search, Bell, Sparkles } from 'lucide-react';
+import { Search, Sparkles } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 import { useUIStore } from '../store/useUIStore';
 import { usePlayerStore } from '../store/usePlayerStore';
 
 export const TopHeader = () => {
   const { profile, user } = useAuthStore();
-  const { toggleAssistant, setSearchQuery, setIsAuthOpen } = useUIStore();
+  const { toggleAssistant, searchQuery, setSearchQuery, setIsAuthOpen } = useUIStore();
   const { trackInteraction } = usePlayerStore();
 
   const handleSearchChange = (query: string) => {
@@ -20,25 +19,26 @@ export const TopHeader = () => {
     <header className="h-20 px-8 flex items-center justify-between border-b border-white/5 bg-black/40 backdrop-blur-3xl shrink-0 z-50">
       <div className="flex items-center gap-12">
         <div className="relative group max-w-xl">
-          <input 
-            type="text" 
-            placeholder="Search movies, TV shows, or genres..." 
+          <label htmlFor="global-search" className="sr-only">Search movies and TV shows</label>
+          <input
+            id="global-search"
+            type="search"
+            placeholder="Search movies, TV shows, or genres..."
+            value={searchQuery}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="bg-white/5 border border-white/10 rounded-full py-2.5 px-12 w-[320px] lg:w-[540px] text-sm focus:outline-none focus:border-brand/50 focus:bg-white/10 transition-all placeholder:text-white/20 font-medium"
+            className="bg-white/5 border border-white/10 rounded-full py-2.5 px-12 w-[220px] sm:w-[320px] lg:w-[540px] text-sm focus:outline-none focus:border-brand/50 focus:bg-white/10 transition-all placeholder:text-white/20 font-medium"
           />
-          <Search className="w-4 h-4 absolute left-4 top-3.5 text-white/30 group-focus-within:text-brand transition-colors" />
-          <div className="absolute right-4 top-2.5 bg-brand/10 text-brand text-[9px] px-2 py-1 rounded-full font-black uppercase tracking-widest hidden sm:flex items-center gap-1">
-            PREMIUM
-          </div>
+          <Search className="w-4 h-4 absolute left-4 top-3.5 text-white/30 group-focus-within:text-brand transition-colors pointer-events-none" aria-hidden="true" />
         </div>
       </div>
 
       <div className="flex items-center gap-6">
-        <button 
+        <button
           onClick={toggleAssistant}
+          aria-label="Open AI copilot"
           className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-xs font-black uppercase tracking-widest group"
         >
-          <Sparkles className="w-4 h-4 text-brand group-hover:scale-110 transition-transform" />
+          <Sparkles className="w-4 h-4 text-brand group-hover:scale-110 transition-transform" aria-hidden="true" />
           <span className="hidden lg:inline text-white/60 group-hover:text-white">Gen-AI Copilot</span>
         </button>
 
