@@ -12,24 +12,31 @@ import { logger } from './logger';
  * partial config never crashes the app at import time — auth/Firestore calls
  * simply fail at runtime and are reported through normalized error handling.
  */
+const resolvedApiKey = env.firebase.apiKey || appletConfig.apiKey;
+const resolvedProjectId = env.firebase.projectId || appletConfig.projectId;
+
+/** Whether Firebase has enough real config to authenticate / read Firestore. */
+export const firebaseEnabled = Boolean(resolvedApiKey && resolvedProjectId);
+
+if (!firebaseEnabled) {
+  logger.warn('Firebase config incomplete — auth and watchlist/progress are disabled.');
+}
+
 const firebaseConfig = {
-  apiKey: env.firebase.apiKey || appletConfig.apiKey,
-  authDomain: env.firebase.authDomain || appletConfig.authDomain,
-  projectId: env.firebase.projectId || appletConfig.projectId,
-  appId: env.firebase.appId || appletConfig.appId,
+  // `getAuth()` throws synchronously on an empty apiKey, which would blank the
+  // entire app before the error boundary can mount. When Firebase is not
+  // configured we initialize with a harmless placeholder so the SDK loads;
+  // actual auth/Firestore usage is gated by `firebaseEnabled`.
+  apiKey: resolvedApiKey || 'unconfigured-placeholder-key',
+  authDomain: env.firebase.authDomain || appletConfig.authDomain || 'localhost',
+  projectId: resolvedProjectId || 'unconfigured',
+  appId: env.firebase.appId || appletConfig.appId || 'unconfigured',
   storageBucket: env.firebase.storageBucket || appletConfig.storageBucket,
   messagingSenderId: env.firebase.messagingSenderId || appletConfig.messagingSenderId,
 };
 
 const firestoreDatabaseId =
   env.firebase.firestoreDatabaseId || appletConfig.firestoreDatabaseId || undefined;
-
-/** Whether Firebase has enough config to actually authenticate / read Firestore. */
-export const firebaseEnabled = Boolean(firebaseConfig.apiKey && firebaseConfig.projectId);
-
-if (!firebaseEnabled) {
-  logger.warn('Firebase config incomplete — auth and watchlist/progress are disabled.');
-}
 
 const app = initializeApp(firebaseConfig);
 export const db = firestoreDatabaseId ? getFirestore(app, firestoreDatabaseId) : getFirestore(app);

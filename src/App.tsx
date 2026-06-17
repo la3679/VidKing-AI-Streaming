@@ -6,7 +6,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Search, Play, Bookmark } from 'lucide-react';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from './lib/firebase';
+import { auth, firebaseEnabled } from './lib/firebase';
 import { useAuthStore } from './store/useAuthStore';
 import { Sidebar } from './components/Sidebar';
 import { TopHeader } from './components/Navbar';
@@ -80,6 +80,12 @@ export default function App() {
   }, [searchQuery]);
 
   useEffect(() => {
+    // Skip the auth subscription entirely when Firebase isn't configured, so we
+    // don't fire doomed network calls with a placeholder key.
+    if (!firebaseEnabled) {
+      setUser(null);
+      return;
+    }
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
     });
