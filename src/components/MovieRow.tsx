@@ -74,7 +74,7 @@ export const MovieRow = ({ title, movies, isLarge, onViewAll }: MovieRowProps) =
               viewport={{ once: true }}
               transition={{ delay: i * 0.05 }}
               onClick={() => handleMovieClick(movie)}
-              className={`flex-none relative group cursor-pointer transition-all duration-500 overflow-hidden rounded-2xl border border-white/5 hover:border-brand/50 ${
+              className={`flex-none relative group cursor-pointer transition-all duration-500 overflow-hidden rounded-2xl border border-white/5 hover:border-brand/50 hover:shadow-[0_0_30px_rgba(229,9,20,0.25)] ${
                 isLarge ? 'w-48 md:w-56 aspect-[2/3]' : 'w-64 md:w-72 aspect-video'
               }`}
             >
