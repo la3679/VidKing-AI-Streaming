@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { X, Play, Star } from 'lucide-react';
 import { motion } from 'motion/react';
 import { getImageUrl, getPersonDetails, getPersonCredits } from '../lib/tmdb';
 import { useUIStore } from '../store/useUIStore';
+import { useEscapeKey } from '../hooks/useEscapeKey';
+import { logger } from '../lib/logger';
 
 export const ActorProfile = () => {
   const { selectedActorId, setSelectedActorId, setSelectedMedia } = useUIStore();
@@ -21,9 +23,11 @@ export const ActorProfile = () => {
           getPersonCredits(selectedActorId)
         ]);
         setDetails(actorDetails);
-        setCredits(actorCredits.sort((a, b) => (b.popularity || 0) - (a.popularity || 0)));
+        setCredits(
+          actorCredits.sort((a: any, b: any) => (b.popularity || 0) - (a.popularity || 0)),
+        );
       } catch (err) {
-        console.error("Error fetching actor data:", err);
+        logger.error('Error fetching actor data:', err);
       } finally {
         setLoading(false);
       }
@@ -31,6 +35,8 @@ export const ActorProfile = () => {
 
     fetchActorData();
   }, [selectedActorId]);
+
+  useEscapeKey(() => setSelectedActorId(null), Boolean(selectedActorId));
 
   if (!selectedActorId) return null;
 
@@ -48,12 +54,16 @@ export const ActorProfile = () => {
         exit={{ scale: 0.9, y: 50 }}
         className="bg-surface w-full max-w-6xl h-full max-h-[95vh] overflow-hidden rounded-3xl shadow-2xl relative flex flex-col"
         onClick={e => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Actor profile"
       >
-        <button 
+        <button
           onClick={() => setSelectedActorId(null)}
+          aria-label="Close actor profile"
           className="absolute top-6 right-6 z-50 p-3 bg-black/60 hover:bg-brand rounded-full text-white transition-all transform hover:rotate-90"
         >
-          <X className="w-6 h-6" />
+          <X className="w-6 h-6" aria-hidden="true" />
         </button>
 
         <div className="flex-1 overflow-y-auto scrollbar-hide">
