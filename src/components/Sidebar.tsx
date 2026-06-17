@@ -1,17 +1,19 @@
 import { Home, Bookmark } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useUIStore } from '../store/useUIStore';
+import { BrandLogo } from './BrandLogo';
 
 export const Sidebar = () => {
   const { toggleAssistant, setSelectedMedia, isWatchlistOpen, setIsWatchlistOpen } = useUIStore();
   return (
     <nav className="w-20 border-r border-white/5 flex flex-col items-center py-8 gap-12 bg-black shrink-0 h-full z-50">
-      <motion.div 
+      <motion.div
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className="w-12 h-12 bg-brand rounded-xl flex items-center justify-center font-black text-2xl tracking-tighter shadow-[0_0_30px_rgba(220,38,38,0.3)] cursor-pointer"
+        className="rounded-xl shadow-[0_0_30px_rgba(220,38,38,0.3)] cursor-pointer"
+        aria-label="VidKing home"
       >
-        VK
+        <BrandLogo size={48} />
       </motion.div>
       
       <div className="flex flex-col gap-10 mt-4">
