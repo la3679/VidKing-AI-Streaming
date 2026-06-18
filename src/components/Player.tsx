@@ -45,7 +45,15 @@ const RESUME_MAX_COMPLETION = 0.95;
 
 type LoadState = 'loading' | 'ready' | 'error';
 
-export const Player = ({ tmdbId, type, season = 1, episode = 1, onClose }: PlayerProps) => {
+export const Player = ({
+  tmdbId,
+  type,
+  season = 1,
+  episode = 1,
+  title,
+  episodeTitle,
+  onClose,
+}: PlayerProps) => {
   const { saveProgress, getProgress } = usePlayerStore();
   const { user } = useAuthStore();
 
@@ -71,7 +79,7 @@ export const Player = ({ tmdbId, type, season = 1, episode = 1, onClose }: Playe
     }, RESUME_CAP_MS);
     (async () => {
       if (user && type) {
-        const resume = await getProgress(user.uid, tmdbId);
+        const resume = await getProgress(user.uid, tmdbId, type, season, episode);
         if (
           !cancelled &&
           resume &&
@@ -87,7 +95,7 @@ export const Player = ({ tmdbId, type, season = 1, episode = 1, onClose }: Playe
       cancelled = true;
       clearTimeout(cap);
     };
-  }, [user, tmdbId, type, getProgress]);
+  }, [user, tmdbId, type, season, episode, getProgress]);
 
   // Build the embed URL. Invalid inputs throw VidkingError -> error UI.
   const embed = useMemo(() => {
@@ -202,11 +210,19 @@ export const Player = ({ tmdbId, type, season = 1, episode = 1, onClose }: Playe
           <span className="font-bold">Back</span>
         </button>
 
-        <div className="text-center">
-          <h2 className="text-lg font-bold tracking-tight">Now Playing</h2>
-          <p className="text-xs text-white/40 uppercase tracking-widest">
-            {type}
-            {type === 'tv' && ` • S${season} E${episode}`}
+        <div className="text-center px-2 min-w-0">
+          <h2 className="text-base sm:text-lg font-bold tracking-tight truncate max-w-[60vw] mx-auto">
+            {title || 'Now Playing'}
+          </h2>
+          <p className="text-xs text-white/50 uppercase tracking-widest truncate max-w-[60vw] mx-auto">
+            {type === 'tv' ? (
+              <>
+                S{season} · E{episode}
+                {episodeTitle && ` · ${episodeTitle}`}
+              </>
+            ) : (
+              'Movie'
+            )}
             {startSeconds > 0 && ` • Resuming ${formatTime(startSeconds)}`}
           </p>
         </div>
