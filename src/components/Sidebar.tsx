@@ -6,7 +6,7 @@ import { BrandLogo } from './BrandLogo';
 export const Sidebar = () => {
   const { toggleAssistant, setSelectedMedia, isWatchlistOpen, setIsWatchlistOpen } = useUIStore();
   return (
-    <nav className="w-20 border-r border-line flex flex-col items-center py-8 gap-12 bg-sidebar shrink-0 h-full z-50">
+    <nav className="w-20 border-r border-line flex flex-col items-center py-8 gap-12 bg-sidebar/70 backdrop-blur-xl shrink-0 h-full z-50">
       <motion.div
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}

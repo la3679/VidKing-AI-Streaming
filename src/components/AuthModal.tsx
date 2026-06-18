@@ -103,7 +103,7 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
       >
         <div className="text-center mb-8">
           <h2 className="text-4xl font-display font-black tracking-tighter text-brand mb-2">
-            VIDKING<span className="text-white ml-0.5">AI</span>
+            VIDKING<span className="text-ink ml-0.5">AI</span>
           </h2>
           <p className="text-xs text-muted uppercase font-black tracking-widest">
             {mode === 'signin' ? 'Welcome back' : 'Create your account'}
@@ -123,7 +123,7 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
           <button
             onClick={() => runProvider('github')}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-3 bg-panel border border-line text-white py-3.5 rounded-xl font-bold hover:bg-panel transition-all active:scale-95 disabled:opacity-60"
+            className="w-full flex items-center justify-center gap-3 bg-panel border border-line text-ink py-3.5 rounded-xl font-bold hover:bg-line transition-all active:scale-95 disabled:opacity-60"
           >
             {busy === 'github' ? <Loader2 className="w-5 h-5 animate-spin" /> : <Github className="w-5 h-5" />}
             Continue with GitHub
