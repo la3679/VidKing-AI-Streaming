@@ -21,6 +21,10 @@ interface PlayerProps {
   type: 'movie' | 'tv';
   season?: number;
   episode?: number;
+  /** Display title (movie/show name). */
+  title?: string;
+  /** Episode title, when playing a TV episode. */
+  episodeTitle?: string;
   onClose: () => void;
 }
 

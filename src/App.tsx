@@ -44,7 +44,12 @@ export default function App() {
   const [scifi, setScifi] = useState<Movie[]>([]);
   const [drama, setDrama] = useState<Movie[]>([]);
   const [tvShows, setTvShows] = useState<Movie[]>([]);
-  const [isPlaying, setIsPlaying] = useState<Movie | null>(null);
+  const [isPlaying, setIsPlaying] = useState<{
+    movie: Movie;
+    season?: number;
+    episode?: number;
+    episodeTitle?: string;
+  } | null>(null);
   const [searchResults, setSearchResults] = useState<Movie[]>([]);
   const [homeLoading, setHomeLoading] = useState(true);
   const [homeError, setHomeError] = useState(false);
@@ -137,12 +142,15 @@ export default function App() {
     loadHome();
   }, [loadHome]);
 
-  const handlePlay = (movie: Movie) => {
+  const handlePlay = (
+    movie: Movie,
+    opts?: { season?: number; episode?: number; episodeTitle?: string },
+  ) => {
     if (!user) {
       setIsAuthOpen(true);
       return;
     }
-    setIsPlaying(movie);
+    setIsPlaying({ movie, ...opts });
     setSelectedMedia(null);
   };
 
@@ -375,10 +383,14 @@ export default function App() {
 
       <AnimatePresence>
         {isPlaying && (
-          <Player 
-            tmdbId={isPlaying.id.toString()} 
-            type={isPlaying.media_type || 'movie'} 
-            onClose={() => setIsPlaying(null)} 
+          <Player
+            tmdbId={isPlaying.movie.id.toString()}
+            type={isPlaying.movie.media_type || 'movie'}
+            season={isPlaying.season}
+            episode={isPlaying.episode}
+            title={isPlaying.movie.title || isPlaying.movie.name}
+            episodeTitle={isPlaying.episodeTitle}
+            onClose={() => setIsPlaying(null)}
           />
         )}
       </AnimatePresence>
