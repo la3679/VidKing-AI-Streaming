@@ -14,7 +14,12 @@ import { logger } from '../lib/logger';
 import { Skeleton } from './states/Skeleton';
 import { AudioIcon } from './icons/AudioIcon';
 import { HeartIcon } from './icons/HeartIcon';
-import { buildTrailerEmbedUrl, sendYouTubeCommand } from '../lib/youtube';
+import {
+  buildTrailerEmbedUrl,
+  sendYouTubeCommand,
+  registerYouTubeListener,
+  isYouTubeOrigin,
+} from '../lib/youtube';
 
 interface MovieDetailsProps {
   media: Movie;
@@ -32,7 +37,9 @@ export const MovieDetails = ({ media, onClose, onPlay }: MovieDetailsProps) => {
   const [isMuted, setIsMuted] = useState(true);
   const [showTrailer, setShowTrailer] = useState(false);
   const [liking, setLiking] = useState(false);
+  const [ytReady, setYtReady] = useState(false);
   const trailerRef = useRef<HTMLIFrameElement>(null);
+  const desiredMutedRef = useRef(true);
 
   const liked = isLiked(media.id.toString());
 
@@ -49,15 +56,37 @@ export const MovieDetails = ({ media, onClose, onPlay }: MovieDetailsProps) => {
     }
   };
 
-  // Toggle audio via the YouTube IFrame API (no reload), inside the click
-  // gesture so the browser permits sound. The trailer always *starts* muted
-  // (autoplay requirement); this is the only thing that unmutes it.
+  // Apply a mute state to the (ready) YouTube player via the IFrame API.
+  const applyMute = (muted: boolean) => {
+    sendYouTubeCommand(trailerRef.current, muted ? 'mute' : 'unMute');
+    if (!muted) sendYouTubeCommand(trailerRef.current, 'setVolume', [100]);
+  };
+
+  // Toggle audio without reloading the iframe. If the player isn't ready yet the
+  // intent is stored and applied once YouTube signals readiness (below).
   const toggleMute = () => {
     const next = !isMuted;
-    sendYouTubeCommand(trailerRef.current, next ? 'mute' : 'unMute');
-    if (!next) sendYouTubeCommand(trailerRef.current, 'setVolume', [100]);
+    desiredMutedRef.current = next;
     setIsMuted(next);
+    if (ytReady) applyMute(next);
   };
+
+  // YouTube ignores commands sent before the player is ready. Register as a
+  // listener on iframe load, then apply the pending mute state on the first
+  // message from the YouTube origin (its readiness signal).
+  const handleTrailerLoad = () => registerYouTubeListener(trailerRef.current);
+
+  useEffect(() => {
+    if (!showTrailer) return;
+    const onMessage = (e: MessageEvent) => {
+      if (!isYouTubeOrigin(e.origin) || ytReady) return;
+      setYtReady(true);
+      applyMute(desiredMutedRef.current);
+    };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showTrailer, ytReady]);
 
   useEffect(() => {
     const fetch = async () => {
@@ -85,6 +114,8 @@ export const MovieDetails = ({ media, onClose, onPlay }: MovieDetailsProps) => {
     // Reset trailer/audio state for the new title, then reveal the trailer.
     setShowTrailer(false);
     setIsMuted(true);
+    setYtReady(false);
+    desiredMutedRef.current = true;
     const timer = setTimeout(() => setShowTrailer(true), 2000);
     return () => clearTimeout(timer);
   }, [media, user, trackInteraction]);
@@ -130,6 +161,7 @@ export const MovieDetails = ({ media, onClose, onPlay }: MovieDetailsProps) => {
                 title={`${media.title || media.name} trailer`}
                 className="w-full h-full scale-[1.35] pointer-events-none"
                 src={buildTrailerEmbedUrl(trailer.key)}
+                onLoad={handleTrailerLoad}
                 allow="autoplay; encrypted-media"
                 allowFullScreen
               ></iframe>
