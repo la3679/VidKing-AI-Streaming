@@ -5,6 +5,7 @@ import { auth, db } from '../lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { logger } from '../lib/logger';
 import { toast } from './useToastStore';
+import { loadLocal, saveLocal } from '../lib/localPersist';
 
 interface AuthState {
   user: User | null;
@@ -36,7 +37,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           email: user.email || '',
           displayName: user.displayName || '',
           photoURL: user.photoURL || '',
-          preferences: { favoriteGenres: [], theme: 'dark' },
+          // Hydrate likes from localStorage so they survive a refresh even
+          // without Firestore; fetchProfile merges the cloud copy when available.
+          preferences: { favoriteGenres: [], theme: 'dark', likedIds: loadLocal<string[]>('likes', user.uid, []) },
         },
       });
       get().fetchProfile(user.uid);
@@ -66,16 +69,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   toggleLike: async (tmdbId) => {
     const { user, profile } = get();
-    if (!user || !profile) return; // caller prompts sign-in for guests
+    if (!user) return; // caller prompts sign-in for guests
 
-    const prefs = profile.preferences ?? { favoriteGenres: [], theme: 'dark' as const };
+    const base = profile ?? {
+      uid: user.uid,
+      email: user.email || '',
+      displayName: user.displayName || '',
+      photoURL: user.photoURL || '',
+      preferences: { favoriteGenres: [], theme: 'dark' as const },
+    };
+    const prefs = base.preferences ?? { favoriteGenres: [], theme: 'dark' as const };
     const current = prefs.likedIds ?? [];
     const wasLiked = current.includes(tmdbId);
     const nextLiked = wasLiked ? current.filter((id) => id !== tmdbId) : [...current, tmdbId];
 
-    // Optimistic update with rollback on failure.
-    const previous = profile;
-    set({ profile: { ...profile, preferences: { ...prefs, likedIds: nextLiked } } });
+    // Optimistic update + persist locally immediately (survives refresh).
+    set({ profile: { ...base, preferences: { ...prefs, likedIds: nextLiked } } });
+    saveLocal('likes', user.uid, nextLiked);
 
     try {
       await setDoc(
@@ -85,9 +95,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       );
       toast.success(wasLiked ? 'Removed from your likes' : 'Added to your likes');
     } catch (error) {
-      set({ profile: previous });
-      logger.error('Failed to update likes:', error);
-      toast.error('Could not update likes. Please try again.');
+      // Firestore unavailable — keep the local change (already saved) instead of
+      // reverting, so likes still work.
+      logger.warn('Likes cloud sync failed; kept local copy:', error);
+      toast.success(wasLiked ? 'Removed from your likes' : 'Added to your likes');
     }
   },
 

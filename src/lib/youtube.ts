@@ -24,6 +24,26 @@ export function sendYouTubeCommand(
   }
 }
 
+/**
+ * Registers the parent as a listener so the player starts emitting events
+ * (including `onReady`). Commands sent before the player is ready are ignored,
+ * so we wait for the first message before applying mute/unmute.
+ */
+export function registerYouTubeListener(iframe: HTMLIFrameElement | null): void {
+  const win = iframe?.contentWindow;
+  if (!win) return;
+  try {
+    win.postMessage(JSON.stringify({ event: 'listening', id: 1, channel: 'widget' }), '*');
+  } catch {
+    /* ignore */
+  }
+}
+
+/** True for messages originating from the YouTube embed. */
+export function isYouTubeOrigin(origin: string): boolean {
+  return origin === 'https://www.youtube.com' || origin === 'https://www.youtube-nocookie.com';
+}
+
 /** Builds a muted-autoplay background-trailer embed URL with the JS API enabled. */
 export function buildTrailerEmbedUrl(videoKey: string): string {
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
