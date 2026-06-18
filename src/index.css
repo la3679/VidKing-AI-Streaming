@@ -9,32 +9,33 @@
  */
 :root {
   color-scheme: light; /* native widgets (scrollbars, inputs) match the theme */
-  /* Light (default) — warm ivory/pearl surfaces, plum-ink text */
-  --bg: #f7f2ea;            /* page background (warm ivory) */
-  --surface: #fffdf9;       /* card / panel surface (pearl) */
-  --surface-2: #f1e9dd;     /* subtle inset panel */
-  --sidebar: #fffdf9;       /* rail / header */
+  /* Light (default) — warm, vibrant cream surfaces over a tinted gradient canvas */
+  --bg: #fbeee2;            /* warm peach-cream base */
+  --surface: #fff8f0;       /* card / panel surface (warm cream, not pure white) */
+  --surface-2: #f6e7d6;     /* tinted inset panel */
+  --sidebar: #fff5ea;       /* rail / header (warm) */
   --ink: #241823;          /* primary text (plum-ink) */
-  --ink-muted: #786a78;    /* secondary text */
-  --line: #e8ddcd;         /* borders / dividers */
-  --scrim: rgba(36, 24, 35, 0.42); /* modal backdrop */
+  --ink-muted: #7c6a76;    /* secondary text */
+  --line: #ecd9c5;         /* warm borders / dividers */
+  --scrim: rgba(36, 24, 35, 0.45); /* modal backdrop */
   --accent: #ff445c;       /* coral-red primary */
   --accent-strong: #e83552;
-  --accent-2: #ffb02e;     /* amber highlight */
+  --accent-2: #ffa62e;     /* amber/marigold highlight */
+  --accent-3: #8b5cf6;     /* violet secondary accent */
   --accent-ink: #6d1f33;   /* deep plum accent text */
   --on-accent: #ffffff;    /* text on accent fills */
 
-  --shadow-soft: 0 6px 20px -8px rgba(60, 30, 40, 0.18);
-  --shadow-card: 0 18px 44px -16px rgba(60, 30, 40, 0.26);
-  --shadow-brand: 0 14px 36px -12px rgba(255, 68, 92, 0.32);
+  --shadow-soft: 0 8px 24px -10px rgba(120, 50, 60, 0.22);
+  --shadow-card: 0 22px 48px -18px rgba(120, 50, 70, 0.30);
+  --shadow-brand: 0 16px 38px -12px rgba(255, 68, 92, 0.38);
 }
 
 [data-theme='dark'] {
   color-scheme: dark;
-  --bg: #0c0a10;
-  --surface: #17141d;
-  --surface-2: #211c2a;
-  --sidebar: #100d15;
+  --bg: #0e0a14;
+  --surface: #1a1622;
+  --surface-2: #241d30;
+  --sidebar: #130f1b;
   --ink: #f6f1f7;
   --ink-muted: #a99fb0;
   --line: rgba(255, 255, 255, 0.10);
@@ -42,6 +43,7 @@
   --accent: #ff5568;
   --accent-strong: #ff4459;
   --accent-2: #ffc24d;
+  --accent-3: #a78bfa;
   --accent-ink: #ffd4dc;
   --on-accent: #ffffff;
 
@@ -62,6 +64,7 @@
   --color-muted: var(--ink-muted);
   --color-line: var(--line);
   --color-amber: var(--accent-2);
+  --color-violet: var(--accent-3);
   --color-plum: var(--accent-ink);
   --color-onaccent: var(--on-accent);
 
@@ -126,6 +129,30 @@
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+
+  /* Vibrant tinted canvas behind the app — soft coral, amber, and violet blooms
+     over the warm base so the UI feels alive without pure-white expanses. Works
+     in both themes (color-mix keeps the tints subtle on dark). */
+  .app-canvas {
+    background-color: var(--bg);
+    background-image:
+      radial-gradient(
+        1100px 520px at 8% -8%,
+        color-mix(in srgb, var(--accent) 22%, transparent),
+        transparent 60%
+      ),
+      radial-gradient(
+        1000px 460px at 102% -2%,
+        color-mix(in srgb, var(--accent-2) 26%, transparent),
+        transparent 55%
+      ),
+      radial-gradient(
+        900px 620px at 50% 118%,
+        color-mix(in srgb, var(--accent-3) 18%, transparent),
+        transparent 62%
+      );
+    background-attachment: fixed;
   }
 
   .bento-card {
