@@ -20,6 +20,7 @@ import { MovieDetails } from './components/MovieDetails';
 import { AuthModal } from './components/AuthModal';
 import { ActorProfile } from './components/ActorProfile';
 import { Player } from './components/Player';
+import { LegalPages } from './components/LegalPages';
 import { EmptyState } from './components/states/EmptyState';
 import { ErrorState } from './components/states/ErrorState';
 import { HeroSkeleton, RowSkeleton, GridSkeleton } from './components/states/Skeleton';
@@ -33,7 +34,7 @@ import { useWatchlistStore } from './store/useWatchlistStore';
 
 export default function App() {
   const { user, setUser } = useAuthStore();
-  const { selectedMedia, setSelectedMedia, isAuthOpen, setIsAuthOpen, selectedActorId, searchQuery, setSearchQuery, isWatchlistOpen, setIsWatchlistOpen } = useUIStore();
+  const { selectedMedia, setSelectedMedia, isAuthOpen, setIsAuthOpen, selectedActorId, searchQuery, setSearchQuery, isWatchlistOpen, setIsWatchlistOpen, legalPage, setLegalPage } = useUIStore();
   const { subscribeToWatchlist, items: watchlistItems, reset: resetWatchlist } = useWatchlistStore();
   const [trending, setTrending] = useState<Movie[]>([]);
   const [originals, setOriginals] = useState<Movie[]>([]);
@@ -165,7 +166,9 @@ export default function App() {
         
         <div className="flex-1 overflow-y-auto scrollbar-hide">
           <div className="px-4 sm:px-6 lg:px-8 pb-12 space-y-12">
-            {isWatchlistOpen ? (
+            {legalPage ? (
+              <LegalPages page={legalPage} onBack={() => setLegalPage(null)} />
+            ) : isWatchlistOpen ? (
               <div className="pt-8 min-h-screen">
                 <div className="flex items-center justify-between mb-8">
                   <div>
@@ -342,12 +345,10 @@ export default function App() {
             <footer className="pt-24 pb-12 border-t border-line">
               <div className="flex flex-col md:flex-row justify-between items-center gap-6 text-[9px] font-black uppercase tracking-[0.4em] opacity-40">
                 <span className="text-brand">VIDKING STREAMING</span>
-                {/* Informational labels — not yet linked, so rendered as
-                    non-interactive text rather than dead links. */}
-                <div className="flex gap-12">
-                  <span>Privacy</span>
-                  <span>Terms</span>
-                  <span>Help</span>
+                <div className="flex gap-8 sm:gap-12">
+                  <button onClick={() => setLegalPage('privacy')} className="hover:text-brand transition-colors uppercase">Privacy</button>
+                  <button onClick={() => setLegalPage('terms')} className="hover:text-brand transition-colors uppercase">Terms</button>
+                  <button onClick={() => setLegalPage('help')} className="hover:text-brand transition-colors uppercase">Help</button>
                 </div>
               </div>
               {/* TMDB requires attribution for use of their API. */}
