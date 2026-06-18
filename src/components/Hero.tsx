@@ -17,7 +17,7 @@ export const Hero = ({ movie }: HeroProps) => {
   const { trackInteraction } = usePlayerStore();
   const { toggleWatchlist, isInWatchlist } = useWatchlistStore();
 
-  if (!movie) return <div className="h-full bento-card bg-neutral-900 animate-pulse" />;
+  if (!movie) return <div className="h-full bento-card bg-panel animate-pulse" />;
 
   const handlePlay = () => {
     setSelectedMedia(movie);
@@ -35,8 +35,10 @@ export const Hero = ({ movie }: HeroProps) => {
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
           referrerPolicy="no-referrer"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-surface via-surface/40 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-transparent opacity-90" />
+        {/* Media scrims stay dark in BOTH themes so the white hero text is always
+            legible over any backdrop image. */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/45 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
       </div>
 
       <div className="relative h-full flex flex-col justify-end p-8 md:p-16">
