@@ -1,5 +1,17 @@
 # Interaction QA — Buttons & Controls
 
+## Update — bright redesign + functional fixes
+
+| Area | Status | Notes |
+| --- | --- | --- |
+| **Theme toggle** (header) | ✅ 🧪 👁 | Switches light/dark, persists to localStorage, applies before paint (no flash); verified live + `useThemeStore` test |
+| **Play → player** | ✅ 👁 | Iframe no longer blocked by a Firestore read; embed verified to load in-browser; load timeout starts only after mount; retry rebuilds the iframe |
+| **Avatar / account menu** | ✅ 🧪 | Header keys off the auth user (not a Firestore doc); avatar photo or initials; menu = name/email/My Library/Sign Out; "Sign In" no longer shows after login; covered by `Navbar.dom.test` |
+| **Mute / unmute** (trailer) | ✅ 👁 | YouTube `onReady` handshake — commands apply to a ready player (verified: 103 readiness messages received) |
+| **Like / watchlist** | ✅ 🧪 | localStorage fallback persists across refresh even without Firestore; kept-on-cloud-failure; covered by `useAuthStore`/`localPersist` tests |
+
+
+
 A full inventory of interactive controls, how each was verified, and its status.
 Verified in a real browser (Vite preview) by driving the DOM and inspecting
 state/labels, plus automated tests where noted. "No fake controls" — every
