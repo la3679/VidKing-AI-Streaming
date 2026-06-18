@@ -48,7 +48,12 @@ describe('TvEpisodes selector', () => {
         overview: '',
         poster_path: null,
         air_date: null,
-        episodes: s === 1 ? [ep(1, 1, 'Pilot'), ep(1, 2, 'Cat')] : [ep(2, 1, 'Seven')],
+        episodes:
+          s === 1
+            ? [ep(1, 1, 'Pilot'), ep(1, 2, 'Cat')]
+            : s === 2
+              ? [ep(2, 1, 'Seven')]
+              : [ep(s, 1, `S${s}E1`)],
       }),
     );
   });
@@ -64,6 +69,23 @@ describe('TvEpisodes selector', () => {
     await userEvent.click(screen.getByRole('tab', { name: /season 2/i }));
     expect(await screen.findByText('1. Seven')).toBeInTheDocument();
     expect(screen.queryByText('1. Pilot')).not.toBeInTheDocument();
+  });
+
+  it('exposes every season for a long-running show and can select the FINAL season', async () => {
+    const many = Array.from({ length: 10 }, (_, i) => season(i + 1)); // 10 seasons
+    const onWatch = vi.fn();
+    render(<TvEpisodes tvId="1399" seasons={many} onWatch={onWatch} />);
+
+    await screen.findByText('1. Pilot'); // season 1 loaded first
+
+    // All 10 season tabs are rendered (reachable, not clipped out of existence).
+    expect(screen.getAllByRole('tab')).toHaveLength(10);
+
+    // Select the LAST season and confirm its episodes load + Watch routes it.
+    await userEvent.click(screen.getByRole('tab', { name: /season 10/i }));
+    expect(await screen.findByText('1. S10E1')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /watch season 10 episode 1/i }));
+    expect(onWatch).toHaveBeenCalledWith(10, 1, 'S10E1');
   });
 
   it('passes the exact season + episode to onWatch', async () => {

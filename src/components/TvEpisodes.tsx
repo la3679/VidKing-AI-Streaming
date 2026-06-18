@@ -1,11 +1,162 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { PlayIcon } from './icons';
 import { getImageUrl, getTvSeasonDetails, orderSeasons } from '../lib/tmdb';
 import { formatRuntime, formatYear, formatRating } from '../lib/format';
 import { logger } from '../lib/logger';
+import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion';
 import type { TvEpisode, TvSeasonSummary } from '../types';
 import { Skeleton } from './states/Skeleton';
 import { ErrorState } from './states/ErrorState';
+
+const seasonLabel = (n: number) => (n === 0 ? 'Specials' : `Season ${n}`);
+
+/**
+ * Horizontal season tab strip that scrolls so EVERY season is reachable on any
+ * screen size. Provides chevron scroll buttons + fade edges when the list
+ * overflows, keeps the selected tab in view, and supports roving arrow-key
+ * navigation (tablist pattern). Touch/trackpad scrolling work as usual; vertical
+ * page/modal scroll is never trapped.
+ */
+const SeasonTabs = ({
+  seasons,
+  selected,
+  onSelect,
+}: {
+  seasons: TvSeasonSummary[];
+  selected: number;
+  onSelect: (n: number) => void;
+}) => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const reduced = usePrefersReducedMotion();
+  const [overflow, setOverflow] = useState({ left: false, right: false });
+
+  const updateOverflow = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    setOverflow({
+      left: scrollLeft > 4,
+      right: scrollLeft + clientWidth < scrollWidth - 4,
+    });
+  }, []);
+
+  useEffect(() => {
+    updateOverflow();
+    const el = scrollRef.current;
+    if (!el) return;
+    el.addEventListener('scroll', updateOverflow, { passive: true });
+    window.addEventListener('resize', updateOverflow);
+    return () => {
+      el.removeEventListener('scroll', updateOverflow);
+      window.removeEventListener('resize', updateOverflow);
+    };
+  }, [updateOverflow, seasons.length]);
+
+  // Keep the selected season visible; move focus too if the user is keyboarding.
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+    const tab = container.querySelector<HTMLElement>(`[data-season="${selected}"]`);
+    if (!tab) return;
+    tab.scrollIntoView({
+      behavior: reduced ? 'auto' : 'smooth',
+      inline: 'center',
+      block: 'nearest',
+    });
+    if (container.contains(document.activeElement) && document.activeElement !== tab) {
+      tab.focus();
+    }
+  }, [selected, reduced, seasons.length]);
+
+  const scrollByChunk = (dir: -1 | 1) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * el.clientWidth * 0.8, behavior: reduced ? 'auto' : 'smooth' });
+  };
+
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    const idx = seasons.findIndex((s) => s.season_number === selected);
+    if (idx < 0) return;
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      onSelect(seasons[Math.min(idx + 1, seasons.length - 1)].season_number);
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      onSelect(seasons[Math.max(idx - 1, 0)].season_number);
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      onSelect(seasons[0].season_number);
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      onSelect(seasons[seasons.length - 1].season_number);
+    }
+  };
+
+  return (
+    <div className="relative">
+      {/* Fade edges (decorative) */}
+      {overflow.left && (
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-card to-transparent z-10" aria-hidden="true" />
+      )}
+      {overflow.right && (
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-card to-transparent z-10" aria-hidden="true" />
+      )}
+
+      {/* Scroll buttons (shown only when scrollable) */}
+      {overflow.left && (
+        <button
+          type="button"
+          aria-label="Scroll seasons left"
+          onClick={() => scrollByChunk(-1)}
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-20 grid place-items-center w-8 h-8 rounded-full bg-card border border-line text-ink shadow-[var(--shadow-soft)] hover:bg-panel"
+        >
+          <ChevronLeft className="w-4 h-4" aria-hidden="true" />
+        </button>
+      )}
+      {overflow.right && (
+        <button
+          type="button"
+          aria-label="Scroll seasons right"
+          onClick={() => scrollByChunk(1)}
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-20 grid place-items-center w-8 h-8 rounded-full bg-card border border-line text-ink shadow-[var(--shadow-soft)] hover:bg-panel"
+        >
+          <ChevronRight className="w-4 h-4" aria-hidden="true" />
+        </button>
+      )}
+
+      <div
+        ref={scrollRef}
+        role="tablist"
+        aria-label="Seasons"
+        onKeyDown={onKeyDown}
+        className="flex gap-2 overflow-x-auto scrollbar-hide scroll-smooth px-1 py-1"
+      >
+        {seasons.map((s) => {
+          const isSel = s.season_number === selected;
+          return (
+            <button
+              key={s.id}
+              type="button"
+              role="tab"
+              aria-selected={isSel}
+              tabIndex={isSel ? 0 : -1}
+              data-season={s.season_number}
+              onClick={() => onSelect(s.season_number)}
+              className={`shrink-0 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all ${
+                isSel
+                  ? 'bg-brand text-onaccent shadow-[var(--shadow-brand)]'
+                  : 'bg-panel text-muted hover:text-ink border border-line'
+              }`}
+            >
+              {seasonLabel(s.season_number)}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
 
 interface TvEpisodesProps {
   tvId: string;
@@ -60,30 +211,14 @@ export const TvEpisodes = ({
 
   return (
     <section aria-label="Episodes" className="space-y-5">
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="flex items-baseline justify-between gap-3">
         <h3 className="text-lg font-display font-black tracking-tight">Episodes</h3>
-        {/* Season selector */}
-        <div role="tablist" aria-label="Seasons" className="flex gap-2 overflow-x-auto scrollbar-hide max-w-full">
-          {ordered.map((s) => {
-            const isSel = s.season_number === selected;
-            return (
-              <button
-                key={s.id}
-                role="tab"
-                aria-selected={isSel}
-                onClick={() => setSelected(s.season_number)}
-                className={`shrink-0 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all ${
-                  isSel
-                    ? 'bg-brand text-onaccent shadow-[var(--shadow-brand)]'
-                    : 'bg-panel text-muted hover:text-ink border border-line'
-                }`}
-              >
-                {s.season_number === 0 ? 'Specials' : `Season ${s.season_number}`}
-              </button>
-            );
-          })}
-        </div>
+        <span className="text-xs font-black uppercase tracking-widest text-brand shrink-0">
+          {seasonLabel(selected)}
+        </span>
       </div>
+      {/* Scrollable season selector — every season reachable on any screen */}
+      <SeasonTabs seasons={ordered} selected={selected} onSelect={setSelected} />
 
       {loading ? (
         <div className="space-y-3">
