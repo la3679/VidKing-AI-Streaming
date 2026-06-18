@@ -14,6 +14,7 @@ import { logger } from '../lib/logger';
 import { Skeleton } from './states/Skeleton';
 import { AudioIcon } from './icons/AudioIcon';
 import { HeartIcon } from './icons/HeartIcon';
+import { TvEpisodes } from './TvEpisodes';
 import {
   buildTrailerEmbedUrl,
   sendYouTubeCommand,
@@ -24,7 +25,10 @@ import {
 interface MovieDetailsProps {
   media: Movie;
   onClose: () => void;
-  onPlay: (movie: Movie) => void;
+  onPlay: (
+    movie: Movie,
+    opts?: { season?: number; episode?: number; episodeTitle?: string },
+  ) => void;
 }
 
 export const MovieDetails = ({ media, onClose, onPlay }: MovieDetailsProps) => {
@@ -192,11 +196,15 @@ export const MovieDetails = ({ media, onClose, onPlay }: MovieDetailsProps) => {
               {media.title || media.name}
             </h2>
             <div className="flex flex-wrap gap-4 items-center">
-              <button 
-                onClick={() => onPlay(media)}
+              <button
+                onClick={() =>
+                  media.media_type === 'tv'
+                    ? onPlay(media, { season: 1, episode: 1 })
+                    : onPlay(media)
+                }
                 className="btn-primary"
               >
-                <PlayIcon className="w-6 h-6" /> Play
+                <PlayIcon className="w-6 h-6" /> {media.media_type === 'tv' ? 'Play S1 · E1' : 'Play'}
               </button>
               <button
                 onClick={() => (user ? toggleWatchlist(user.uid, media) : setIsAuthOpen(true))}
@@ -322,6 +330,19 @@ export const MovieDetails = ({ media, onClose, onPlay }: MovieDetailsProps) => {
             )}
           </div>
         </div>
+
+        {/* TV: season selector + episode picker (movies skip this entirely) */}
+        {media.media_type === 'tv' && details?.seasons && (
+          <div className="px-6 sm:px-8 pb-10">
+            <TvEpisodes
+              tvId={media.id.toString()}
+              seasons={details.seasons}
+              onWatch={(season, episode, episodeTitle) =>
+                onPlay(media, { season, episode, episodeTitle })
+              }
+            />
+          </div>
+        )}
       </motion.div>
     </motion.div>
   );
