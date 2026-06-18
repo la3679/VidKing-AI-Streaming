@@ -99,13 +99,13 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
         aria-modal="true"
         aria-label="Sign in to VidKing"
         onClick={(e) => e.stopPropagation()}
-        className="bento-card w-full max-w-md p-8 sm:p-10 bg-neutral-900 shadow-2xl border-brand/20"
+        className="bento-card w-full max-w-md p-8 sm:p-10 bg-card shadow-2xl border-brand/20"
       >
         <div className="text-center mb-8">
           <h2 className="text-4xl font-display font-black tracking-tighter text-brand mb-2">
             VIDKING<span className="text-white ml-0.5">AI</span>
           </h2>
-          <p className="text-xs text-white/40 uppercase font-black tracking-widest">
+          <p className="text-xs text-muted uppercase font-black tracking-widest">
             {mode === 'signin' ? 'Welcome back' : 'Create your account'}
           </p>
         </div>
@@ -123,7 +123,7 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
           <button
             onClick={() => runProvider('github')}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-3 bg-white/5 border border-white/10 text-white py-3.5 rounded-xl font-bold hover:bg-white/10 transition-all active:scale-95 disabled:opacity-60"
+            className="w-full flex items-center justify-center gap-3 bg-panel border border-line text-white py-3.5 rounded-xl font-bold hover:bg-panel transition-all active:scale-95 disabled:opacity-60"
           >
             {busy === 'github' ? <Loader2 className="w-5 h-5 animate-spin" /> : <Github className="w-5 h-5" />}
             Continue with GitHub
@@ -132,10 +132,10 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
 
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-white/5" />
+            <div className="w-full border-t border-line" />
           </div>
           <div className="relative flex justify-center text-[10px] uppercase">
-            <span className="bg-neutral-900 px-3 text-white/20 font-black tracking-[0.3em]">
+            <span className="bg-card px-3 text-muted font-black tracking-[0.3em]">
               or with email
             </span>
           </div>
@@ -149,11 +149,11 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
               onChange={(e) => setName(e.target.value)}
               placeholder="Display name (optional)"
               aria-label="Display name"
-              className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 px-4 focus:outline-none focus:border-brand/50 transition-all text-sm"
+              className="w-full bg-panel border border-line rounded-xl py-3.5 px-4 focus:outline-none focus:border-brand/50 transition-all text-sm"
             />
           )}
           <div className="relative group">
-            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20 group-focus-within:text-brand transition-colors" aria-hidden="true" />
+            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted group-focus-within:text-brand transition-colors" aria-hidden="true" />
             <input
               type="email"
               value={email}
@@ -161,11 +161,11 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
               placeholder="Email"
               aria-label="Email"
               autoComplete="email"
-              className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 pl-12 pr-4 focus:outline-none focus:border-brand/50 transition-all text-sm"
+              className="w-full bg-panel border border-line rounded-xl py-3.5 pl-12 pr-4 focus:outline-none focus:border-brand/50 transition-all text-sm"
             />
           </div>
           <div className="relative group">
-            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20 group-focus-within:text-brand transition-colors" aria-hidden="true" />
+            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted group-focus-within:text-brand transition-colors" aria-hidden="true" />
             <input
               type="password"
               value={password}
@@ -173,7 +173,7 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
               placeholder="Password"
               aria-label="Password"
               autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-              className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 pl-12 pr-4 focus:outline-none focus:border-brand/50 transition-all text-sm"
+              className="w-full bg-panel border border-line rounded-xl py-3.5 pl-12 pr-4 focus:outline-none focus:border-brand/50 transition-all text-sm"
             />
           </div>
 
@@ -192,7 +192,7 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
           </button>
         </form>
 
-        <p className="mt-6 text-center text-xs text-white/40">
+        <p className="mt-6 text-center text-xs text-muted">
           {mode === 'signin' ? "Don't have an account?" : 'Already have an account?'}{' '}
           <button
             onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}

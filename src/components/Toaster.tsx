@@ -9,9 +9,15 @@ const ICONS = {
 } as const;
 
 const STYLES: Record<ToastVariant, string> = {
-  success: 'border-green-400/30 text-green-200',
-  error: 'border-brand/40 text-red-200',
-  info: 'border-white/15 text-white',
+  success: 'border-l-4 border-l-green-500',
+  error: 'border-l-4 border-l-brand',
+  info: 'border-l-4 border-l-amber',
+};
+
+const ICON_COLOR: Record<ToastVariant, string> = {
+  success: 'text-green-500',
+  error: 'text-brand',
+  info: 'text-amber',
 };
 
 /** Renders transient toast notifications. Mounted once near the app root. */
@@ -34,14 +40,14 @@ export const Toaster = () => {
               initial={{ opacity: 0, x: 40 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 40 }}
-              className={`glass-card bg-black/70 ${STYLES[t.variant]} px-4 py-3 flex items-center gap-3 shadow-xl`}
+              className={`glass-card text-ink ${STYLES[t.variant]} px-4 py-3 flex items-center gap-3`}
             >
-              <Icon className="w-5 h-5 shrink-0" aria-hidden="true" />
+              <Icon className={`w-5 h-5 shrink-0 ${ICON_COLOR[t.variant]}`} aria-hidden="true" />
               <p className="flex-1 text-sm font-medium">{t.message}</p>
               <button
                 onClick={() => dismiss(t.id)}
                 aria-label="Dismiss notification"
-                className="text-white/40 hover:text-white transition-colors"
+                className="text-muted hover:text-ink transition-colors"
               >
                 <X className="w-4 h-4" aria-hidden="true" />
               </button>

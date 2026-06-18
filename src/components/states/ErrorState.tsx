@@ -22,7 +22,7 @@ export const ErrorState = ({
       <AlertTriangle className="w-7 h-7 text-brand" aria-hidden="true" />
     </div>
     <h3 className="text-xl font-black uppercase tracking-tight mb-2">{title}</h3>
-    <p className="text-white/40 text-sm max-w-sm mx-auto leading-relaxed mb-6">{message}</p>
+    <p className="text-muted text-sm max-w-sm mx-auto leading-relaxed mb-6">{message}</p>
     {onRetry && (
       <button onClick={onRetry} className="btn-secondary px-8 gap-2">
         <RotateCw className="w-4 h-4" aria-hidden="true" />

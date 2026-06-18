@@ -42,7 +42,7 @@ const MovieRowBase = ({ title, movies, isLarge, onViewAll }: MovieRowProps) => {
   return (
     <div className="relative group/row">
       <div className="flex items-center justify-between mb-4 pr-12">
-        <h2 className="text-sm font-black uppercase tracking-[0.2em] text-white/50 group-hover/row:text-white transition-colors">
+        <h2 className="text-sm font-black uppercase tracking-[0.2em] text-muted group-hover/row:text-ink transition-colors">
           {title}
         </h2>
         {onViewAll && (
@@ -60,7 +60,8 @@ const MovieRowBase = ({ title, movies, isLarge, onViewAll }: MovieRowProps) => {
       <div className="relative">
         <button 
           onClick={() => scroll('left')}
-          className="absolute left-0 top-0 bottom-0 z-40 bg-black/80 w-10 opacity-0 group-hover/row:opacity-100 transition-opacity flex items-center justify-center hover:bg-brand/20 rounded-l-2xl"
+          aria-label="Scroll left"
+          className="absolute left-0 top-0 bottom-0 z-40 bg-card/90 backdrop-blur-sm border border-line text-ink w-10 opacity-0 group-hover/row:opacity-100 transition-opacity flex items-center justify-center hover:bg-panel rounded-l-2xl"
         >
           <ChevronLeft className="w-6 h-6" />
         </button>
@@ -118,7 +119,7 @@ const MovieRowBase = ({ title, movies, isLarge, onViewAll }: MovieRowProps) => {
                     <AddIcon active={isInWatchlist(movie.id.toString())} className="w-4 h-4" />
                   </button>
                 </div>
-                <h3 className="text-sm font-bold truncate tracking-tight">{movie.title || movie.name}</h3>
+                <h3 className="text-sm font-bold truncate tracking-tight text-white">{movie.title || movie.name}</h3>
                 <div className="flex items-center justify-between mt-1">
                    <p className="text-[10px] text-brand font-black uppercase tracking-widest">{votePercent(movie.vote_average)}% Match</p>
                 </div>
@@ -129,7 +130,8 @@ const MovieRowBase = ({ title, movies, isLarge, onViewAll }: MovieRowProps) => {
 
         <button 
           onClick={() => scroll('right')}
-          className="absolute right-0 top-0 bottom-0 z-40 bg-black/80 w-10 opacity-0 group-hover/row:opacity-100 transition-opacity flex items-center justify-center hover:bg-brand/20 rounded-r-2xl"
+          aria-label="Scroll right"
+          className="absolute right-0 top-0 bottom-0 z-40 bg-card/90 backdrop-blur-sm border border-line text-ink w-10 opacity-0 group-hover/row:opacity-100 transition-opacity flex items-center justify-center hover:bg-panel rounded-r-2xl"
         >
           <ChevronRight className="w-6 h-6" />
         </button>
