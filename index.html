@@ -4,8 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="VidKing — an AI-powered movie and TV streaming experience with personalized recommendations." />
-    <meta name="color-scheme" content="dark" />
+    <meta name="color-scheme" content="light dark" />
     <title>VidKing — AI Streaming</title>
+    <script>
+      // Apply the saved theme before paint to avoid a flash (default: bright).
+      (function () {
+        try {
+          var t = localStorage.getItem('vk_theme');
+          document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
