@@ -138,7 +138,7 @@ export const MovieDetails = ({ media, onClose, onPlay }: MovieDetailsProps) => {
         initial={{ scale: 0.9, y: 50 }}
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.9, y: 50 }}
-        className="bg-[#181818] w-full max-w-5xl h-fit max-h-[90vh] overflow-y-auto rounded-xl shadow-2xl relative scrollbar-hide"
+        className="bg-card text-ink w-full max-w-5xl h-fit max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl relative scrollbar-hide border border-line"
         onClick={e => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -165,12 +165,12 @@ export const MovieDetails = ({ media, onClose, onPlay }: MovieDetailsProps) => {
                 allow="autoplay; encrypted-media"
                 allowFullScreen
               ></iframe>
-              <div className="absolute inset-0 bg-gradient-to-t from-[#181818] via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent" />
               <button
                 onClick={toggleMute}
                 aria-label={isMuted ? 'Unmute trailer' : 'Mute trailer'}
                 aria-pressed={!isMuted}
-                className="absolute bottom-8 right-8 p-3 bg-black/40 border border-white/20 rounded-full hover:bg-white/10 hover:border-white/40 transition-all z-20 active:scale-95"
+                className="absolute bottom-8 right-8 p-3 bg-black/50 border border-white/20 text-white rounded-full hover:bg-black/70 hover:border-white/40 transition-all z-20 active:scale-95"
               >
                 <AudioIcon muted={isMuted} className="w-6 h-6" />
               </button>
@@ -183,7 +183,7 @@ export const MovieDetails = ({ media, onClose, onPlay }: MovieDetailsProps) => {
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#181818] via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent" />
             </>
           )}
           
@@ -202,7 +202,7 @@ export const MovieDetails = ({ media, onClose, onPlay }: MovieDetailsProps) => {
                 onClick={() => (user ? toggleWatchlist(user.uid, media) : setIsAuthOpen(true))}
                 aria-label={isInWatchlist(media.id.toString()) ? 'Remove from My List' : 'Add to My List'}
                 aria-pressed={isInWatchlist(media.id.toString())}
-                className={`p-2.5 border rounded-full transition-all active:scale-95 ${isInWatchlist(media.id.toString()) ? 'bg-brand border-brand text-white' : 'bg-black/40 border-white/20 hover:bg-white/10 hover:border-white/40'}`}
+                className={`p-2.5 border rounded-full transition-all active:scale-95 ${isInWatchlist(media.id.toString()) ? 'bg-brand border-brand text-white' : 'bg-card/70 border-line text-ink hover:bg-panel'}`}
               >
                 <AddIcon active={isInWatchlist(media.id.toString())} className="w-6 h-6" />
               </button>
@@ -211,7 +211,7 @@ export const MovieDetails = ({ media, onClose, onPlay }: MovieDetailsProps) => {
                 disabled={liking}
                 aria-label={!user ? 'Sign in to like' : liked ? 'Unlike' : 'Like'}
                 aria-pressed={liked}
-                className={`p-2.5 border rounded-full transition-all active:scale-95 disabled:opacity-60 ${liked ? 'bg-brand/20 border-brand text-brand' : 'bg-black/40 border-white/20 hover:bg-white/10 hover:border-white/40'}`}
+                className={`p-2.5 border rounded-full transition-all active:scale-95 disabled:opacity-60 ${liked ? 'bg-brand/20 border-brand text-brand' : 'bg-card/70 border-line text-ink hover:bg-panel'}`}
               >
                 {liking ? (
                   <Loader2 className="w-6 h-6 animate-spin" />
@@ -230,21 +230,21 @@ export const MovieDetails = ({ media, onClose, onPlay }: MovieDetailsProps) => {
               {media.vote_average > 0 && (
                 <span className="text-green-400 font-bold">{votePercent(media.vote_average)}% Match</span>
               )}
-              {year && <span className="text-gray-400">{year}</span>}
-              {runtime && <span className="text-gray-400">{runtime}</span>}
-              <span className="border border-gray-500 rounded px-1.5 py-0 text-[10px] uppercase font-black text-gray-400">
+              {year && <span className="text-muted">{year}</span>}
+              {runtime && <span className="text-muted">{runtime}</span>}
+              <span className="border border-gray-500 rounded px-1.5 py-0 text-[10px] uppercase font-black text-muted">
                 {media.media_type === 'tv' ? 'Series' : 'Film'}
               </span>
             </div>
 
-            <p className="text-lg leading-relaxed text-gray-200">
+            <p className="text-lg leading-relaxed text-ink">
               {media.overview}
             </p>
 
             {details?.genres && (
               <div className="flex flex-wrap gap-2 pt-4">
                 {details.genres.map((g: any) => (
-                  <span key={g.id} className="bg-white/5 border border-white/10 px-3 py-1 rounded-full text-xs text-gray-300">
+                  <span key={g.id} className="bg-panel border border-line px-3 py-1 rounded-full text-xs text-muted">
                     {g.name}
                   </span>
                 ))}
@@ -255,8 +255,8 @@ export const MovieDetails = ({ media, onClose, onPlay }: MovieDetailsProps) => {
               <h3 className="text-xl font-bold flex items-center gap-2">
                 Audience Insights
               </h3>
-              <div className="glass-card p-6 border-white/10 bg-white/5">
-                <p className="text-sm text-gray-300 italic">
+              <div className="bg-panel border border-line rounded-2xl p-6">
+                <p className="text-sm text-muted italic">
                   "This title is highly recommended for its {media.vote_average > 7 ? 'exceptional cinematic quality' : 'compelling narrative'} and strong emotional core."
                 </p>
               </div>
@@ -265,7 +265,7 @@ export const MovieDetails = ({ media, onClose, onPlay }: MovieDetailsProps) => {
 
           <div className="space-y-8">
             <div>
-              <p className="text-gray-500 text-xs uppercase font-black tracking-widest mb-2">Cast</p>
+              <p className="text-muted text-xs uppercase font-black tracking-widest mb-2">Cast</p>
               {loading && !details ? (
                 <div className="space-y-2">
                   <Skeleton className="h-4 w-full" />
@@ -278,7 +278,7 @@ export const MovieDetails = ({ media, onClose, onPlay }: MovieDetailsProps) => {
                     type="button"
                     key={c.id}
                     aria-label={`View ${c.name}`}
-                    className="text-gray-300 hover:text-brand hover:underline cursor-pointer transition-colors"
+                    className="text-muted hover:text-brand hover:underline cursor-pointer transition-colors"
                     onClick={() => {
                       setSelectedActorId(c.id.toString());
                       onClose();
@@ -287,14 +287,14 @@ export const MovieDetails = ({ media, onClose, onPlay }: MovieDetailsProps) => {
                     {c.name},
                   </button>
                 ))}
-                {details?.credits?.cast?.length > 10 && <span className="text-gray-400 italic">more</span>}
+                {details?.credits?.cast?.length > 10 && <span className="text-muted italic">more</span>}
               </div>
               )}
             </div>
 
             {details?.recommendations?.results && (
               <div>
-                <p className="text-gray-500 text-xs uppercase font-black tracking-widest mb-4">Recommended for you</p>
+                <p className="text-muted text-xs uppercase font-black tracking-widest mb-4">Recommended for you</p>
                 <div className="grid grid-cols-2 gap-2">
                   {details.recommendations.results.slice(0, 4).map((rec: any) => (
                     <button

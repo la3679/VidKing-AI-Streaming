@@ -149,7 +149,7 @@ export default function App() {
   const watchlistArr = Object.values(watchlistItems);
 
   return (
-    <div className="flex h-screen w-full bg-surface text-slate-100 overflow-hidden font-sans">
+    <div className="flex h-screen w-full bg-surface text-ink overflow-hidden font-sans">
       <Sidebar />
       
       <main className="flex-1 flex flex-col min-w-0 relative">
@@ -162,7 +162,7 @@ export default function App() {
                 <div className="flex items-center justify-between mb-8">
                   <div>
                     <h2 className="text-4xl font-display font-black tracking-tighter uppercase mb-2">My Library</h2>
-                    <p className="text-sm text-white/40 uppercase tracking-[0.2em]">{watchlistArr.length} Saved Titles</p>
+                    <p className="text-sm text-muted uppercase tracking-[0.2em]">{watchlistArr.length} Saved Titles</p>
                   </div>
                   <button 
                     onClick={() => setIsWatchlistOpen(false)}
@@ -188,7 +188,7 @@ export default function App() {
                           backdrop_path: movie.poster_path // Fallback
                         } as any)}
                       >
-                        <div className="lift aspect-[2/3] rounded-2xl overflow-hidden border border-white/5 relative group-hover:border-brand/40 transition-all shadow-xl">
+                        <div className="lift aspect-[2/3] rounded-2xl overflow-hidden border border-line relative group-hover:border-brand/40 transition-all shadow-xl">
                           <img 
                             src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} 
                             alt="" 
@@ -224,7 +224,7 @@ export default function App() {
                 <div className="flex items-center justify-between mb-8">
                   <div>
                     <h2 className="text-3xl font-display font-black tracking-tighter uppercase mb-2">Search Results</h2>
-                    <p className="text-sm text-white/40 uppercase tracking-[0.2em]">Found {searchResults.length} matches for "{searchQuery}"</p>
+                    <p className="text-sm text-muted uppercase tracking-[0.2em]">Found {searchResults.length} matches for "{searchQuery}"</p>
                   </div>
                   <button 
                     onClick={() => setSearchQuery('')}
@@ -252,7 +252,7 @@ export default function App() {
                         aria-label={`Open ${movie.title || movie.name}`}
                         onClick={() => setSelectedMedia(movie)}
                       >
-                        <div className="lift aspect-[2/3] rounded-2xl overflow-hidden border border-white/5 relative group-hover:border-brand/40 transition-all shadow-xl">
+                        <div className="lift aspect-[2/3] rounded-2xl overflow-hidden border border-line relative group-hover:border-brand/40 transition-all shadow-xl">
                           <img 
                             src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} 
                             alt="" 
@@ -331,7 +331,7 @@ export default function App() {
               </>
             )}
 
-            <footer className="pt-24 pb-12 border-t border-white/5">
+            <footer className="pt-24 pb-12 border-t border-line">
               <div className="flex flex-col md:flex-row justify-between items-center gap-6 text-[9px] font-black uppercase tracking-[0.4em] opacity-40">
                 <span className="text-brand">VIDKING STREAMING</span>
                 {/* Informational labels — not yet linked, so rendered as
@@ -343,13 +343,13 @@ export default function App() {
                 </div>
               </div>
               {/* TMDB requires attribution for use of their API. */}
-              <p className="mt-6 text-center text-[10px] text-white/30 leading-relaxed normal-case tracking-normal">
+              <p className="mt-6 text-center text-[10px] text-muted leading-relaxed normal-case tracking-normal">
                 This product uses the{' '}
                 <a
                   href="https://www.themoviedb.org/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="underline hover:text-white"
+                  className="underline hover:text-ink"
                 >
                   TMDB
                 </a>{' '}

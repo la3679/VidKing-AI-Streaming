@@ -116,9 +116,9 @@ export const AIAssistant = () => {
           aria-label="VidKing AI assistant"
           className="fixed z-[100] flex flex-col shadow-2xl overflow-hidden inset-x-3 bottom-3 h-[70vh] sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-[400px] sm:h-[600px]"
         >
-          <div className="glass-card flex-1 flex flex-col h-full bg-black/60 border border-brand/20">
+          <div className="glass-card flex-1 flex flex-col h-full border border-brand/20">
             {/* Header */}
-            <div className="p-5 border-b border-white/10 flex items-center justify-between bg-brand/5">
+            <div className="p-5 border-b border-line flex items-center justify-between bg-brand/5">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-brand rounded-xl shadow-lg shadow-brand/20">
                   <Sparkles className="w-5 h-5 text-white" aria-hidden="true" />
@@ -138,7 +138,7 @@ export const AIAssistant = () => {
                   <button
                     onClick={clearConversation}
                     aria-label="Clear conversation"
-                    className="p-2 hover:bg-white/10 rounded-xl transition-colors border border-white/5"
+                    className="p-2 hover:bg-panel rounded-xl transition-colors border border-line"
                   >
                     <Trash2 className="w-4 h-4 opacity-60" aria-hidden="true" />
                   </button>
@@ -146,7 +146,7 @@ export const AIAssistant = () => {
                 <button
                   onClick={toggleAssistant}
                   aria-label="Close assistant"
-                  className="p-2 hover:bg-white/10 rounded-xl transition-colors border border-white/5"
+                  className="p-2 hover:bg-panel rounded-xl transition-colors border border-line"
                 >
                   <X className="w-5 h-5 opacity-60" aria-hidden="true" />
                 </button>
@@ -157,12 +157,12 @@ export const AIAssistant = () => {
             <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide" aria-live="polite">
               {messages.length === 0 && (
                 <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-4">
-                  <div className="p-4 bg-white/5 rounded-full ring-1 ring-white/10">
+                  <div className="p-4 bg-panel rounded-full ring-1 ring-white/10">
                     <BrainCircuit className="w-12 h-12 text-brand/50" aria-hidden="true" />
                   </div>
                   <div>
                     <h4 className="font-bold text-lg">How can I help you today?</h4>
-                    <p className="text-sm text-gray-400">
+                    <p className="text-sm text-muted">
                       Ask for recommendations, explain a plot, or find something like a title you love.
                     </p>
                   </div>
@@ -171,7 +171,7 @@ export const AIAssistant = () => {
                       <button
                         key={hint}
                         onClick={() => sendMessage(hint)}
-                        className="p-2 border border-white/10 rounded-lg text-xs hover:bg-white/5 hover:border-brand/40 transition-colors text-gray-300"
+                        className="p-2 border border-line rounded-lg text-xs hover:bg-panel hover:border-brand/40 transition-colors text-muted"
                       >
                         {hint}
                       </button>
@@ -195,7 +195,7 @@ export const AIAssistant = () => {
                           ? 'bg-brand text-white rounded-tr-none'
                           : msg.isError
                             ? 'bg-amber-500/10 text-amber-100 border border-amber-400/30 rounded-tl-none'
-                            : 'bg-white/10 text-gray-100 rounded-tl-none border border-white/10'
+                            : 'bg-panel text-gray-100 rounded-tl-none border border-line'
                       }`}
                     >
                       <div className="markdown-body">
@@ -216,7 +216,7 @@ export const AIAssistant = () => {
 
               {status === 'thinking' && (
                 <div className="flex justify-start" role="status" aria-label="Assistant is thinking">
-                  <div className="bg-white/10 p-3 rounded-2xl flex gap-1">
+                  <div className="bg-panel p-3 rounded-2xl flex gap-1">
                     <span className="w-1.5 h-1.5 bg-brand rounded-full animate-bounce" />
                     <span className="w-1.5 h-1.5 bg-brand rounded-full animate-bounce [animation-delay:0.15s]" />
                     <span className="w-1.5 h-1.5 bg-brand rounded-full animate-bounce [animation-delay:0.3s]" />
@@ -227,7 +227,7 @@ export const AIAssistant = () => {
             </div>
 
             {/* Input */}
-            <div className="p-4 border-t border-white/10 bg-black/40">
+            <div className="p-4 border-t border-line bg-panel/50">
               <div className="relative">
                 <label htmlFor="assistant-input" className="sr-only">
                   Ask VidKing AI
@@ -239,7 +239,7 @@ export const AIAssistant = () => {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && sendMessage(input)}
                   placeholder="Ask VidKing AI…"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-4 pr-14 text-sm focus:outline-none focus:ring-1 focus:ring-brand"
+                  className="w-full bg-panel border border-line rounded-xl py-3 pl-4 pr-14 text-sm focus:outline-none focus:ring-1 focus:ring-brand"
                 />
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                   <button

@@ -73,7 +73,7 @@ export const ContinueWatchingRow = () => {
 
   return (
     <div className="relative">
-      <h2 className="text-sm font-black uppercase tracking-[0.2em] text-white/50 mb-4">
+      <h2 className="text-sm font-black uppercase tracking-[0.2em] text-muted mb-4">
         Continue Watching
       </h2>
       <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2">
@@ -87,7 +87,7 @@ export const ContinueWatchingRow = () => {
             aria-label={`Resume ${movie.title || movie.name} (${progressPercent}% watched)`}
             className="flex-none w-64 md:w-72 group cursor-pointer text-left"
           >
-            <div className="aspect-video rounded-2xl overflow-hidden border border-white/5 relative group-hover:border-brand/50 transition-all">
+            <div className="aspect-video rounded-2xl overflow-hidden border border-line relative group-hover:border-brand/50 transition-all">
               <img
                 src={getImageUrl(movie.backdrop_path, 'w780')}
                 alt=""

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Sparkles, LogOut, Bookmark } from 'lucide-react';
-import { SearchIcon } from './icons';
+import { SearchIcon, ThemeIcon } from './icons';
 import { useAuthStore } from '../store/useAuthStore';
+import { useThemeStore } from '../store/useThemeStore';
 import { useUIStore } from '../store/useUIStore';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useWatchlistStore } from '../store/useWatchlistStore';
@@ -21,6 +22,7 @@ export const TopHeader = () => {
     useUIStore();
   const { trackInteraction } = usePlayerStore();
   const { reset: resetWatchlist } = useWatchlistStore();
+  const { theme, toggle: toggleTheme } = useThemeStore();
   const [menuOpen, setMenuOpen] = useState(false);
 
   // Always render from auth (`user`); enrich with the Firestore `profile` when
@@ -48,7 +50,7 @@ export const TopHeader = () => {
   };
 
   return (
-    <header className="h-20 px-8 flex items-center justify-between border-b border-white/5 bg-black/40 backdrop-blur-3xl shrink-0 z-50">
+    <header className="h-20 px-4 sm:px-8 flex items-center justify-between border-b border-line bg-sidebar/80 backdrop-blur-xl shrink-0 z-50">
       <div className="flex items-center gap-12">
         <div className="relative group max-w-xl">
           <label htmlFor="global-search" className="sr-only">Search movies and TV shows</label>
@@ -58,9 +60,9 @@ export const TopHeader = () => {
             placeholder="Search movies, TV shows, or genres..."
             value={searchQuery}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="bg-white/5 border border-white/10 rounded-full py-2.5 px-12 w-[220px] sm:w-[320px] lg:w-[540px] text-sm focus:outline-none focus:border-brand/50 focus:bg-white/10 transition-all placeholder:text-white/20 font-medium"
+            className="bg-panel border border-line rounded-full py-2.5 px-12 w-[180px] sm:w-[320px] lg:w-[540px] text-sm text-ink focus:outline-none focus:border-brand/50 transition-all placeholder:text-muted font-medium"
           />
-          <SearchIcon className="w-4 h-4 absolute left-4 top-3.5 text-white/30 group-focus-within:text-brand transition-colors pointer-events-none" />
+          <SearchIcon className="w-4 h-4 absolute left-4 top-3.5 text-muted group-focus-within:text-brand transition-colors pointer-events-none" />
         </div>
       </div>
 
@@ -68,17 +70,25 @@ export const TopHeader = () => {
         <button
           onClick={toggleAssistant}
           aria-label="Open AI copilot"
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-xs font-black uppercase tracking-widest group"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-panel hover:bg-line border border-line transition-all text-xs font-black uppercase tracking-widest group"
         >
           <Sparkles className="w-4 h-4 text-brand group-hover:scale-110 transition-transform" aria-hidden="true" />
-          <span className="hidden lg:inline text-white/60 group-hover:text-white">Gen-AI Copilot</span>
+          <span className="hidden lg:inline text-muted group-hover:text-ink">Gen-AI Copilot</span>
         </button>
 
-        <div className="h-6 w-[1px] bg-white/10 mx-2 hidden sm:block"></div>
+        <button
+          onClick={toggleTheme}
+          aria-label={theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme'}
+          className="p-2.5 rounded-xl bg-panel hover:bg-line border border-line text-ink transition-colors"
+        >
+          <ThemeIcon dark={theme === 'light'} className="w-4 h-4" />
+        </button>
+
+        <div className="h-6 w-[1px] bg-line mx-2 hidden sm:block"></div>
 
         {loading ? (
           // Auth still initializing — show a placeholder, not "Sign In" (no flash).
-          <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 animate-pulse" aria-hidden="true" />
+          <div className="w-10 h-10 rounded-xl bg-panel border border-line animate-pulse" aria-hidden="true" />
         ) : account ? (
           <div className="relative">
             <button
@@ -89,10 +99,10 @@ export const TopHeader = () => {
               className="flex items-center gap-4 group cursor-pointer"
             >
               <div className="text-right hidden sm:block">
-                <div className="text-[9px] text-white/30 uppercase font-black tracking-widest leading-none mb-1">Signed in</div>
+                <div className="text-[9px] text-muted uppercase font-black tracking-widest leading-none mb-1">Signed in</div>
                 <div className="text-xs font-black tracking-tight max-w-[140px] truncate">{account.displayName || account.email || 'Member'}</div>
               </div>
-              <div className="w-10 h-10 rounded-xl border border-white/10 bg-white/5 overflow-hidden group-hover:border-brand/50 transition-all shadow-lg flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl border border-line bg-panel overflow-hidden group-hover:border-brand/50 transition-all shadow-lg flex items-center justify-center">
                 {account.photoURL ? (
                   <img src={account.photoURL} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 ) : (
@@ -105,12 +115,12 @@ export const TopHeader = () => {
                 <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} aria-hidden="true" />
                 <div
                   role="menu"
-                  className="absolute right-0 mt-3 w-64 glass-card bg-black/80 border-white/10 p-2 z-50 shadow-2xl"
+                  className="absolute right-0 mt-3 w-64 glass-card p-2 z-50"
                 >
-                  <div className="px-3 py-2.5 mb-1 border-b border-white/5">
+                  <div className="px-3 py-2.5 mb-1 border-b border-line">
                     <div className="text-sm font-black tracking-tight truncate">{account.displayName || 'Member'}</div>
                     {account.email && (
-                      <div className="text-[11px] text-white/40 truncate">{account.email}</div>
+                      <div className="text-[11px] text-muted truncate">{account.email}</div>
                     )}
                   </div>
                   <button
@@ -119,14 +129,14 @@ export const TopHeader = () => {
                       setMenuOpen(false);
                       setIsWatchlistOpen(true);
                     }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-bold text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-bold text-muted hover:bg-panel hover:text-ink transition-colors"
                   >
                     <Bookmark className="w-4 h-4" aria-hidden="true" /> My Library
                   </button>
                   <button
                     role="menuitem"
                     onClick={handleLogout}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-bold text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-bold text-muted hover:bg-panel hover:text-ink transition-colors"
                   >
                     <LogOut className="w-4 h-4" aria-hidden="true" /> Sign out
                   </button>

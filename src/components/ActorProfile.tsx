@@ -91,7 +91,7 @@ export const ActorProfile = () => {
 
                 <div className="relative flex flex-col sm:flex-row items-center sm:items-end gap-6 sm:gap-8 px-6 sm:px-10 lg:px-12 pt-16 pb-8">
                   {/* Portrait card — face framed, never distorted */}
-                  <div className="w-32 sm:w-44 lg:w-52 shrink-0 aspect-[2/3] rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-white/5 flex items-center justify-center">
+                  <div className="w-32 sm:w-44 lg:w-52 shrink-0 aspect-[2/3] rounded-2xl overflow-hidden border border-line shadow-2xl bg-panel flex items-center justify-center">
                     {details?.profile_path ? (
                       <img
                         src={getImageUrl(details.profile_path, 'w500')}
@@ -100,7 +100,7 @@ export const ActorProfile = () => {
                         referrerPolicy="no-referrer"
                       />
                     ) : (
-                      <span className="text-4xl font-display font-black text-white/30">
+                      <span className="text-4xl font-display font-black text-muted">
                         {(details?.name || '?')
                           .split(' ')
                           .map((w: string) => w[0])
@@ -119,7 +119,7 @@ export const ActorProfile = () => {
                     >
                       {details?.name}
                     </motion.h2>
-                    <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-3 gap-y-1 text-xs sm:text-sm font-black uppercase tracking-[0.2em] text-white/60">
+                    <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-3 gap-y-1 text-xs sm:text-sm font-black uppercase tracking-[0.2em] text-muted">
                       {[details?.known_for_department, details?.place_of_birth, details?.birthday]
                         .filter(Boolean)
                         .map((item: string, i: number) => (
@@ -138,13 +138,13 @@ export const ActorProfile = () => {
                 <div className="lg:col-span-2 space-y-8">
                   <div>
                     <h3 className="text-xs font-black uppercase tracking-[0.3em] text-brand mb-4">Biography</h3>
-                    <p className="text-lg leading-relaxed text-white/70 font-medium">
+                    <p className="text-lg leading-relaxed text-muted font-medium">
                       {details?.biography || "No biography available for this artist."}
                     </p>
                   </div>
 
                   <div>
-                    <h3 className="text-xs font-black uppercase tracking-[0.3em] text-white/40 mb-8 font-sans">Full Filmography ({credits.length} Titles)</h3>
+                    <h3 className="text-xs font-black uppercase tracking-[0.3em] text-muted mb-8 font-sans">Full Filmography ({credits.length} Titles)</h3>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
                       {credits.slice(0, 20).map((work) => (
                         <motion.div 
@@ -156,7 +156,7 @@ export const ActorProfile = () => {
                             setSelectedActorId(null);
                           }}
                         >
-                          <div className="aspect-[2/3] rounded-xl overflow-hidden border border-white/5 group-hover:border-brand/50 transition-all mb-3 relative shadow-xl">
+                          <div className="aspect-[2/3] rounded-xl overflow-hidden border border-line group-hover:border-brand/50 transition-all mb-3 relative shadow-xl">
                             <img 
                               src={getImageUrl(work.poster_path, 'w342')} 
                               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
@@ -174,7 +174,7 @@ export const ActorProfile = () => {
                           <div className="text-[10px] font-black uppercase tracking-tight line-clamp-1 group-hover:text-brand transition-colors">
                             {work.title || work.name}
                           </div>
-                          <div className="text-[9px] text-white/30 uppercase tracking-widest mt-1">
+                          <div className="text-[9px] text-muted uppercase tracking-widest mt-1">
                             {work.character ? `as ${work.character}` : (work.release_date || work.first_air_date || '').split('-')[0]}
                           </div>
                         </motion.div>
@@ -184,30 +184,30 @@ export const ActorProfile = () => {
                 </div>
 
                 <div className="space-y-12">
-                   <div className="bento-card p-8 border-white/5 bg-white/[0.02]">
+                   <div className="bento-card p-8 border-line bg-panel">
                       <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-brand mb-6">Artist Metrics</h4>
                       <div className="space-y-6">
                          <div>
-                            <div className="text-[9px] text-white/30 uppercase font-black tracking-widest mb-1">Global Popularity</div>
+                            <div className="text-[9px] text-muted uppercase font-black tracking-widest mb-1">Global Popularity</div>
                             <div className="text-3xl font-black italic text-white">{Math.round(details?.popularity)}</div>
                          </div>
                          <div>
-                            <div className="text-[9px] text-white/30 uppercase font-black tracking-widest mb-1">Known For</div>
+                            <div className="text-[9px] text-muted uppercase font-black tracking-widest mb-1">Known For</div>
                             <div className="text-lg font-black text-white/90">{details?.known_for_department}</div>
                          </div>
                       </div>
                    </div>
 
                    <div className="space-y-4">
-                      <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 mb-4">External Links</h4>
+                      <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted mb-4">External Links</h4>
                       {details?.imdb_id && (
                         <a 
                           href={`https://www.imdb.com/name/${details.imdb_id}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 transition-colors group"
+                          className="flex items-center justify-between p-4 bg-panel rounded-xl border border-line hover:bg-panel transition-colors group"
                         >
-                          <span className="text-xs font-black uppercase tracking-widest text-white/60 group-hover:text-white">IMDb Profile</span>
+                          <span className="text-xs font-black uppercase tracking-widest text-muted group-hover:text-white">IMDb Profile</span>
                           <span className="text-[10px] text-brand">↗</span>
                         </a>
                       )}

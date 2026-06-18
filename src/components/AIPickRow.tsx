@@ -48,7 +48,7 @@ export const AIPickRow = () => {
             <BrainCircuit className="w-5 h-5 text-brand" />
           </div>
           <div>
-            <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-white/50">Neural Recommendation Core</h2>
+            <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-muted">Neural Recommendation Core</h2>
             <div className="flex items-center gap-2">
               <p className="text-[10px] text-brand uppercase font-black tracking-widest">Hybrid Signal Ranking</p>
               <span className="w-1 h-1 rounded-full bg-green-500 animate-pulse" />
@@ -59,7 +59,7 @@ export const AIPickRow = () => {
           onClick={loadPicks}
           disabled={loading}
           aria-label="Refresh recommendations"
-          className="text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-white transition-colors flex items-center gap-2 disabled:opacity-50"
+          className="text-[10px] font-black uppercase tracking-widest text-muted hover:text-ink transition-colors flex items-center gap-2 disabled:opacity-50"
         >
           <RefreshCcw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
           Refresh picks
@@ -96,15 +96,15 @@ export const AIPickRow = () => {
                     </div>
                   </div>
                   <h3 className="text-lg font-bold mb-2 tracking-tight group-hover:text-brand transition-colors line-clamp-1">{pick.title || pick.name}</h3>
-                  <p className="text-xs text-gray-400 line-clamp-4 leading-relaxed opacity-80 mix-blend-plus-lighter">
+                  <p className="text-xs text-muted line-clamp-4 leading-relaxed opacity-80 mix-blend-plus-lighter">
                     {pick.overview}
                   </p>
                 </div>
                 
-                <div className="mt-6 flex items-center justify-between border-t border-white/5 pt-4">
+                <div className="mt-6 flex items-center justify-between border-t border-line pt-4">
                   <div className="flex flex-col">
-                    <span className="text-[9px] text-white/30 uppercase font-black tracking-widest mb-1">Why this pick</span>
-                    <span className="text-[10px] font-bold text-gray-500">AI ranked for you</span>
+                    <span className="text-[9px] text-muted uppercase font-black tracking-widest mb-1">Why this pick</span>
+                    <span className="text-[10px] font-bold text-muted">AI ranked for you</span>
                   </div>
                   <button 
                     onClick={(e) => {
