@@ -48,6 +48,27 @@ export const CloseIcon = ({ className = 'w-6 h-6' }: IconProps) => (
   </svg>
 );
 
+/** Theme toggle: a sun (light) / crescent moon (dark) custom mark. */
+export const ThemeIcon = ({ dark = false, className = 'w-5 h-5' }: IconProps & { dark?: boolean }) =>
+  dark ? (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+      <path d="M20 14.5A8 8 0 0 1 9.5 4a.75.75 0 0 0-1-.86A9.5 9.5 0 1 0 20.86 15.5a.75.75 0 0 0-.86-1Z" />
+    </svg>
+  ) : (
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="4.2" fill="currentColor" stroke="none" />
+      <path d="M12 2.5v2.4M12 19.1v2.4M4.6 4.6l1.7 1.7M17.7 17.7l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.6 19.4l1.7-1.7M17.7 6.3l1.7-1.7" />
+    </svg>
+  );
+
 /** Search control with a slightly tapered handle. */
 export const SearchIcon = ({ className = 'w-5 h-5' }: IconProps) => (
   <svg
