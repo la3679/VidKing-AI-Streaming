@@ -194,7 +194,7 @@ export const AIAssistant = () => {
                         msg.role === 'user'
                           ? 'bg-brand text-white rounded-tr-none'
                           : msg.isError
-                            ? 'bg-amber-500/10 text-amber-100 border border-amber-400/30 rounded-tl-none'
+                            ? 'bg-amber/10 text-ink border border-amber/40 rounded-tl-none'
                             : 'bg-panel text-gray-100 rounded-tl-none border border-line'
                       }`}
                     >
@@ -204,7 +204,7 @@ export const AIAssistant = () => {
                       {msg.isError && isLast && (
                         <button
                           onClick={retryLast}
-                          className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-amber-200 hover:text-white transition-colors"
+                          className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-brand hover:underline transition-colors"
                         >
                           <RotateCw className="w-3.5 h-3.5" aria-hidden="true" /> Retry
                         </button>

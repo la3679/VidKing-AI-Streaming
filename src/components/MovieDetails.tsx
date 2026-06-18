@@ -165,7 +165,7 @@ export const MovieDetails = ({ media, onClose, onPlay }: MovieDetailsProps) => {
                 allow="autoplay; encrypted-media"
                 allowFullScreen
               ></iframe>
-              <div className="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-card via-card/60 to-transparent" />
               <button
                 onClick={toggleMute}
                 aria-label={isMuted ? 'Unmute trailer' : 'Mute trailer'}
@@ -183,7 +183,7 @@ export const MovieDetails = ({ media, onClose, onPlay }: MovieDetailsProps) => {
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-card via-card/60 to-transparent" />
             </>
           )}
           
