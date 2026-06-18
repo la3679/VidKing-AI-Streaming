@@ -24,11 +24,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   profile: null,
   loading: true,
   setUser: (user) => {
-    set({ user, loading: false });
     if (user) {
+      // Derive a profile from the auth user IMMEDIATELY so the header/avatar
+      // never waits on (or breaks because of) Firestore. Firestore then
+      // enriches it in the background.
+      set({
+        user,
+        loading: false,
+        profile: {
+          uid: user.uid,
+          email: user.email || '',
+          displayName: user.displayName || '',
+          photoURL: user.photoURL || '',
+          preferences: { favoriteGenres: [], theme: 'dark' },
+        },
+      });
       get().fetchProfile(user.uid);
     } else {
-      set({ profile: null });
+      set({ user: null, profile: null, loading: false });
     }
   },
   fetchProfile: async (uid) => {
@@ -36,25 +49,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const docRef = doc(db, 'users', uid);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
-        set({ profile: docSnap.data() as UserProfile });
+        // Merge Firestore data over the auth-derived fallback.
+        const data = docSnap.data() as UserProfile;
+        set((s) => ({ profile: { ...(s.profile as UserProfile), ...data } }));
       } else {
-        // Create default profile
-        const user = auth.currentUser;
-        if (user) {
-          const newProfile: UserProfile = {
-            uid: user.uid,
-            email: user.email || '',
-            displayName: user.displayName || '',
-            photoURL: user.photoURL || '',
-            preferences: { favoriteGenres: [], theme: 'dark' },
-          };
-          await setDoc(docRef, newProfile);
-          set({ profile: newProfile });
-        }
+        // Best-effort: persist the auth-derived profile as the initial doc.
+        const cur = get().profile;
+        if (cur) await setDoc(docRef, cur, { merge: true });
       }
     } catch (error) {
-      // A profile read/write failure must not break the session.
-      logger.warn('Could not load user profile:', error);
+      // A Firestore failure must NOT clear the auth-derived profile.
+      logger.warn('Could not load user profile (using auth fallback):', error);
     }
   },
   isLiked: (tmdbId) => Boolean(get().profile?.preferences?.likedIds?.includes(tmdbId)),
