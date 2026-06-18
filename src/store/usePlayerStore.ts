@@ -14,6 +14,19 @@ import {
 import { WatchProgress } from '../types';
 import { logger } from '../lib/logger';
 
+/**
+ * Firestore document id for a progress record. TV episodes get a per-episode key
+ * so S1E1 and S1E2 never overwrite each other; movies use the bare TMDB id.
+ */
+export function progressDocId(
+  tmdbId: string,
+  type: 'movie' | 'tv',
+  season?: number,
+  episode?: number,
+): string {
+  return type === 'tv' ? `${tmdbId}_s${season ?? 1}_e${episode ?? 1}` : tmdbId;
+}
+
 export interface ContinueWatchingItem {
   tmdbId: string;
   type: 'movie' | 'tv';
@@ -33,8 +46,14 @@ export interface ResumeInfo {
 interface PlayerState {
   currentProgress: WatchProgress | null;
   saveProgress: (userId: string, progress: Partial<WatchProgress>) => Promise<void>;
-  /** Fetches saved progress for resume. Returns null when none / unavailable. */
-  getProgress: (userId: string, tmdbId: string) => Promise<ResumeInfo | null>;
+  /** Fetches saved progress for resume (per-episode for TV). Null when none. */
+  getProgress: (
+    userId: string,
+    tmdbId: string,
+    type?: 'movie' | 'tv',
+    season?: number,
+    episode?: number,
+  ) => Promise<ResumeInfo | null>;
   /** In-progress (not finished) titles, most-recently watched first. */
   getContinueWatching: (userId: string) => Promise<ContinueWatchingItem[]>;
   trackInteraction: (
@@ -51,7 +70,8 @@ export const usePlayerStore = create<PlayerState>((set) => ({
   saveProgress: async (userId, data) => {
     if (!data.tmdbId) return;
 
-    const path = `users/${userId}/progress/${data.tmdbId}`;
+    const docId = progressDocId(data.tmdbId, data.type ?? 'movie', data.season, data.episode);
+    const path = `users/${userId}/progress/${docId}`;
     try {
       // `progress` is a percentage (0-100); `timestamp` is the playback position
       // in seconds. completionRate (0-1) is derived for resume/continue-watching.
@@ -75,8 +95,8 @@ export const usePlayerStore = create<PlayerState>((set) => ({
     }
   },
 
-  getProgress: async (userId, tmdbId) => {
-    const path = `users/${userId}/progress/${tmdbId}`;
+  getProgress: async (userId, tmdbId, type = 'movie', season, episode) => {
+    const path = `users/${userId}/progress/${progressDocId(tmdbId, type, season, episode)}`;
     try {
       const snap = await getDoc(doc(db, path));
       if (!snap.exists()) return null;
