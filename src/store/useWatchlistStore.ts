@@ -4,6 +4,7 @@ import { doc, setDoc, deleteDoc, collection, onSnapshot, serverTimestamp } from 
 import { Movie } from '../types';
 import { toast } from './useToastStore';
 import { logger } from '../lib/logger';
+import { loadLocal, saveLocal } from '../lib/localPersist';
 
 interface WatchlistState {
   items: Record<string, any>;
@@ -35,11 +36,13 @@ export const useWatchlistStore = create<WatchlistState>((set, get) => ({
       };
     }
     set({ items: optimistic });
+    // Persist locally immediately so the change survives a refresh even if
+    // Firestore is unavailable.
+    saveLocal('watchlist', userId, optimistic);
 
     try {
       if (wasInList) {
         await deleteDoc(doc(db, path));
-        toast.success(`Removed "${title}" from your list`);
       } else {
         await setDoc(doc(db, path), {
           tmdbId,
@@ -48,24 +51,22 @@ export const useWatchlistStore = create<WatchlistState>((set, get) => ({
           type: movie.media_type || 'movie',
           addedAt: serverTimestamp(),
         });
-        toast.success(`Added "${title}" to your list`);
       }
+      toast.success(wasInList ? `Removed "${title}" from your list` : `Added "${title}" to your list`);
     } catch (error) {
-      logger.error('Watchlist update failed:', error);
-      // Revert the optimistic change.
-      set((s) => {
-        const reverted = { ...s.items };
-        if (wasInList) reverted[tmdbId] = { tmdbId, title, poster_path: movie.poster_path };
-        else delete reverted[tmdbId];
-        return { items: reverted };
-      });
-      toast.error('Could not update your list. Please try again.');
+      // Firestore unavailable — KEEP the local change rather than reverting, so
+      // the watchlist still works (and persists via localStorage).
+      logger.warn('Watchlist cloud sync failed; kept local copy:', error);
+      toast.success(wasInList ? `Removed "${title}" from your list` : `Added "${title}" to your list`);
     }
   },
 
   isInWatchlist: (tmdbId) => !!get().items[tmdbId],
 
   subscribeToWatchlist: (userId) => {
+    // Hydrate from localStorage immediately so saved titles show without waiting.
+    set({ items: loadLocal('watchlist', userId, {}) });
+
     const q = collection(db, `users/${userId}/watchlist`);
     return onSnapshot(
       q,
@@ -75,8 +76,10 @@ export const useWatchlistStore = create<WatchlistState>((set, get) => ({
           items[d.id] = d.data();
         });
         set({ items });
+        saveLocal('watchlist', userId, items); // keep local mirror in sync
       },
-      (error) => logger.warn('Watchlist subscription error:', error),
+      // On error keep the locally-hydrated items rather than clearing.
+      (error) => logger.warn('Watchlist subscription error (using local copy):', error),
     );
   },
 
