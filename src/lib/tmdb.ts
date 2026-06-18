@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { env } from './env';
 import { normalizeError } from './errors';
-import type { Movie } from '../types';
+import type { Movie, TvSeasonSummary, TvSeasonDetails, TvEpisode } from '../types';
 
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 
@@ -100,6 +100,47 @@ export const getTvDetails = async (id: string) =>
   cachedGet<Record<string, any>>(`/tv/${id}`, {
     append_to_response: 'videos,credits,similar,recommendations',
   });
+
+// ── TV seasons & episodes ───────────────────────────────────────────────────
+
+/**
+ * Returns a show's seasons (from /tv/{id}) ordered by season number. Season 0
+ * ("Specials") is sorted to the END rather than hidden, so it's discoverable
+ * without dominating the list.
+ */
+/** Pure: keep non-empty seasons, order ascending, Specials (0) last. */
+export function orderSeasons(seasons: TvSeasonSummary[]): TvSeasonSummary[] {
+  return seasons
+    .filter((s) => (s.episode_count ?? 0) > 0)
+    .slice()
+    .sort((a, b) => {
+      if (a.season_number === 0) return 1;
+      if (b.season_number === 0) return -1;
+      return a.season_number - b.season_number;
+    });
+}
+
+export const getTvSeasons = async (id: string): Promise<TvSeasonSummary[]> => {
+  const data = await getTvDetails(id);
+  return orderSeasons((data.seasons ?? []) as TvSeasonSummary[]);
+};
+
+/** Full episode list for one season (cached, so re-selecting a season is instant). */
+export const getTvSeasonDetails = async (
+  id: string,
+  seasonNumber: number,
+): Promise<TvSeasonDetails> => {
+  const data = await cachedGet<TvSeasonDetails>(`/tv/${id}/season/${seasonNumber}`);
+  return { ...data, episodes: data.episodes ?? [] };
+};
+
+/** Single episode details (optional deeper view). */
+export const getTvEpisodeDetails = async (
+  id: string,
+  seasonNumber: number,
+  episodeNumber: number,
+): Promise<TvEpisode> =>
+  cachedGet<TvEpisode>(`/tv/${id}/season/${seasonNumber}/episode/${episodeNumber}`);
 
 // ── Search (debounced+abortable at the call site) ───────────────────────────
 

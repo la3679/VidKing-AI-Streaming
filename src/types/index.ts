@@ -25,6 +25,42 @@ export interface UserProfile {
   };
 }
 
+/** A season summary as returned in a TV show's `seasons[]` (TMDB /tv/{id}). */
+export interface TvSeasonSummary {
+  id: number;
+  season_number: number;
+  name: string;
+  episode_count: number;
+  overview: string;
+  poster_path: string | null;
+  air_date: string | null;
+  vote_average?: number;
+}
+
+/** A single episode from TMDB /tv/{id}/season/{n}. */
+export interface TvEpisode {
+  id: number;
+  episode_number: number;
+  season_number: number;
+  name: string;
+  overview: string;
+  still_path: string | null;
+  air_date: string | null;
+  runtime: number | null;
+  vote_average: number;
+}
+
+/** Season details (episodes) from TMDB /tv/{id}/season/{n}. */
+export interface TvSeasonDetails {
+  id: number;
+  season_number: number;
+  name: string;
+  overview: string;
+  poster_path: string | null;
+  air_date: string | null;
+  episodes: TvEpisode[];
+}
+
 export interface WatchProgress {
   tmdbId: string;
   type: 'movie' | 'tv';
