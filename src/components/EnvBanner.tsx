@@ -20,22 +20,22 @@ export const EnvBanner = () => {
     >
       <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" aria-hidden="true" />
       <div className="flex-1 text-sm">
-        <p className="font-bold text-amber-200 mb-1">Configuration incomplete</p>
-        <ul className="text-amber-100/80 space-y-1 text-xs leading-relaxed">
+        <p className="font-bold text-ink mb-1">Configuration incomplete</p>
+        <ul className="text-muted space-y-1 text-xs leading-relaxed">
           {missing.map((m) => (
             <li key={m.name}>
-              <code className="text-amber-200">{m.name}</code> — {m.purpose}
+              <code className="text-ink">{m.name}</code> — {m.purpose}
             </li>
           ))}
         </ul>
-        <p className="text-amber-100/50 text-[11px] mt-2">
+        <p className="text-muted text-[11px] mt-2">
           Copy <code>.env.example</code> to <code>.env.local</code> and fill in the values.
         </p>
       </div>
       <button
         onClick={() => setDismissed(true)}
         aria-label="Dismiss configuration warning"
-        className="text-amber-200/60 hover:text-amber-100 transition-colors"
+        className="text-muted hover:text-ink transition-colors"
       >
         <X className="w-4 h-4" />
       </button>
