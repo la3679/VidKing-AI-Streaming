@@ -8,6 +8,7 @@
  * them, giving theme-aware `bg-surface`, `text-ink`, `text-brand`, etc.
  */
 :root {
+  color-scheme: light; /* native widgets (scrollbars, inputs) match the theme */
   /* Light (default) — warm ivory/pearl surfaces, plum-ink text */
   --bg: #f7f2ea;            /* page background (warm ivory) */
   --surface: #fffdf9;       /* card / panel surface (pearl) */
@@ -29,6 +30,7 @@
 }
 
 [data-theme='dark'] {
+  color-scheme: dark;
   --bg: #0c0a10;
   --surface: #17141d;
   --surface-2: #211c2a;
