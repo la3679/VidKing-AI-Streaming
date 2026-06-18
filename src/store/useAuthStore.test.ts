@@ -44,11 +44,11 @@ describe('useAuthStore likes', () => {
     expect(setDoc).toHaveBeenCalledTimes(2);
   });
 
-  it('toggleLike rolls back when the write fails', async () => {
+  it('keeps the like locally when the cloud write fails (offline fallback)', async () => {
     (setDoc as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('offline'));
     await useAuthStore.getState().toggleLike('99');
-    // Optimistic add was reverted, so it should not be liked.
-    expect(useAuthStore.getState().isLiked('99')).toBe(false);
+    // Firestore failed, but the like persists via the local fallback.
+    expect(useAuthStore.getState().isLiked('99')).toBe(true);
   });
 
   it('toggleLike is a no-op for guests', async () => {
